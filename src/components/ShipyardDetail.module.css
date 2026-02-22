@@ -60,6 +60,44 @@
   color: var(--text-secondary);
 }
 
+/* Status badges and line counts */
+.cardStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  flex-wrap: wrap;
+}
+
+.statusBadge {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+}
+
+.status-full {
+  color: var(--signal-ok);
+  border-color: var(--signal-ok);
+}
+
+.status-partial {
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+.status-incomplete {
+  color: var(--signal-hot);
+  border-color: var(--signal-hot);
+}
+
+.lineCounts {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+}
+
 .actBtn {
   font-size: 0.65rem;
   padding: 2px 6px;

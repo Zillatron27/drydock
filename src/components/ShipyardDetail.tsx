@@ -26,6 +26,93 @@ const CATEGORY_LABELS: Record<MaterialCategory, string> = {
   plastics: 'Plastics', minerals: 'Minerals', chemicals: 'Chemicals',
 };
 
+type BuildStatus = 'full' | 'partial' | 'incomplete';
+
+interface ExchangeAnalysis {
+  exchange: string;
+  status: BuildStatus;
+  buildable: number;  // how many complete ships can be built from supply
+  linesFull: number;
+  linesPartial: number;
+  linesUnavailable: number;
+}
+
+/** Analyze supply availability for a BOM at one exchange */
+function analyzeExchange(
+  bom: BOMEntry[],
+  exchange: string,
+  priceLookup: Map<string, FIOExchangeEntry>,
+): ExchangeAnalysis {
+  let minBuildable = Infinity;
+  let linesFull = 0;
+  let linesPartial = 0;
+  let linesUnavailable = 0;
+
+  for (const entry of bom) {
+    const data = priceLookup.get(`${entry.ticker}:${exchange}`);
+    const supply = data?.AskCount ?? 0;
+
+    if (supply >= entry.quantity) {
+      linesFull++;
+    } else if (supply > 0) {
+      linesPartial++;
+    } else {
+      linesUnavailable++;
+    }
+
+    const buildableForMat = entry.quantity > 0 ? Math.floor(supply / entry.quantity) : 0;
+    minBuildable = Math.min(minBuildable, buildableForMat);
+  }
+
+  const buildable = bom.length > 0 ? minBuildable : 0;
+  let status: BuildStatus;
+  if (linesUnavailable === 0 && linesPartial === 0) {
+    status = 'full';
+  } else if (linesUnavailable === bom.length) {
+    status = 'incomplete';
+  } else {
+    status = 'partial';
+  }
+
+  return { exchange, status, buildable, linesFull, linesPartial, linesUnavailable };
+}
+
+/** Analyze cherry-pick supply: can we build from the combined best sources? */
+function analyzeCherryPick(
+  bom: BOMEntry[],
+  priceLookup: Map<string, FIOExchangeEntry>,
+  bestPrices: Map<string, { exchange: string; price: number }>,
+): { status: BuildStatus; buildable: number } {
+  let minBuildable = Infinity;
+  let allFull = true;
+  let anyAvail = false;
+
+  for (const entry of bom) {
+    const best = bestPrices.get(entry.ticker);
+    if (!best) {
+      allFull = false;
+      minBuildable = 0;
+      continue;
+    }
+
+    anyAvail = true;
+    const data = priceLookup.get(`${entry.ticker}:${best.exchange}`);
+    const supply = data?.AskCount ?? 0;
+
+    if (supply < entry.quantity) allFull = false;
+    const buildableForMat = entry.quantity > 0 ? Math.floor(supply / entry.quantity) : 0;
+    minBuildable = Math.min(minBuildable, buildableForMat);
+  }
+
+  const buildable = bom.length > 0 && isFinite(minBuildable) ? minBuildable : 0;
+  const status: BuildStatus = allFull ? 'full' : anyAvail ? 'partial' : 'incomplete';
+  return { status, buildable };
+}
+
+const STATUS_LABELS: Record<BuildStatus, string> = {
+  full: 'Full', partial: 'Partial', incomplete: 'Incomplete',
+};
+
 export default function ShipyardDetail({ blueprintName, bom }: ShipyardDetailProps) {
   const [prices, setPrices] = useState<FIOExchangeEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,6 +182,21 @@ export default function ShipyardDetail({ blueprintName, bom }: ShipyardDetailPro
     }
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
   }, [cherryPick]);
+
+  // Per-exchange availability analysis
+  const exchangeAnalyses = useMemo(() => {
+    const map = new Map<string, ExchangeAnalysis>();
+    for (const ex of EXCHANGES) {
+      map.set(ex, analyzeExchange(bom, ex, priceLookup));
+    }
+    return map;
+  }, [bom, priceLookup]);
+
+  // Cherry-pick availability analysis
+  const cherryAnalysis = useMemo(
+    () => analyzeCherryPick(bom, priceLookup, bestPrices),
+    [bom, priceLookup, bestPrices],
+  );
 
   const handleCopyACT = useCallback(async (exchange: string) => {
     if (!prices) return;
@@ -166,6 +268,7 @@ export default function ShipyardDetail({ blueprintName, bom }: ShipyardDetailPro
           const isBest = ex.exchange === cheapestExchange;
           const total = ex.available + ex.missing;
           const pct = total > 0 ? Math.round((ex.available / total) * 100) : 0;
+          const analysis = exchangeAnalyses.get(ex.exchange);
 
           return (
             <div key={ex.exchange} className={`${styles.exchangeCard} ${isBest ? styles.best : ''}`}>
@@ -176,6 +279,17 @@ export default function ShipyardDetail({ blueprintName, bom }: ShipyardDetailPro
               <div className={styles.cardTotal}>
                 {ex.total > 0 ? formatCurrency(ex.total) : '—'}
               </div>
+              {analysis && (
+                <div className={styles.cardStatus}>
+                  <span className={`${styles.statusBadge} ${styles[`status-${analysis.status}`]}`}>
+                    {STATUS_LABELS[analysis.status]}
+                    {analysis.buildable > 0 && ` ×${analysis.buildable}`}
+                  </span>
+                  <span className={styles.lineCounts}>
+                    {analysis.linesFull}F / {analysis.linesPartial}P / {analysis.linesUnavailable}U
+                  </span>
+                </div>
+              )}
               <div className={styles.cardAvail}>
                 {pct}% available ({ex.available}/{total})
               </div>
@@ -195,6 +309,10 @@ export default function ShipyardDetail({ blueprintName, bom }: ShipyardDetailPro
         <div className={styles.cherryPick}>
           <div>
             <span className={styles.cherryLabel}>Cherry-pick</span>
+            <span className={`${styles.statusBadge} ${styles[`status-${cherryAnalysis.status}`]}`} style={{ marginLeft: 'var(--gap-sm)' }}>
+              {STATUS_LABELS[cherryAnalysis.status]}
+              {cherryAnalysis.buildable > 0 && ` ×${cherryAnalysis.buildable}`}
+            </span>
             <span className={styles.cherryTotal} style={{ marginLeft: 'var(--gap-md)' }}>
               {formatCurrency(cherryPick.total)}
             </span>
