@@ -133,7 +133,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <span>DryDock v0.1.0</span>
+        <span>DryDock v0.2.0</span>
         <span className="separator">|</span>
         <span>27bit industries</span>
       </footer>

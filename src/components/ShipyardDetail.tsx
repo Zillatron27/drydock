@@ -113,6 +113,39 @@ const STATUS_LABELS: Record<BuildStatus, string> = {
   full: 'Full', partial: 'Partial', incomplete: 'Incomplete',
 };
 
+/** Build a verdict string like "12/15 full, 3 partial" for the cherry-pick panel */
+function buildCherryVerdict(
+  bom: BOMEntry[],
+  priceLookup: Map<string, FIOExchangeEntry>,
+  bestPrices: Map<string, { exchange: string; price: number }>,
+): string {
+  let full = 0;
+  let partial = 0;
+  let unavailable = 0;
+
+  for (const entry of bom) {
+    const best = bestPrices.get(entry.ticker);
+    if (!best) {
+      unavailable++;
+      continue;
+    }
+    const data = priceLookup.get(`${entry.ticker}:${best.exchange}`);
+    const supply = data?.AskCount ?? 0;
+    if (supply >= entry.quantity) {
+      full++;
+    } else if (supply > 0) {
+      partial++;
+    } else {
+      unavailable++;
+    }
+  }
+
+  const total = bom.length;
+  if (full === total) return `All ${total} materials available`;
+  if (unavailable === 0) return `${full}/${total} full, ${partial} partial`;
+  return `${unavailable} of ${total} unavailable`;
+}
+
 export default function ShipyardDetail({ blueprintName, bom }: ShipyardDetailProps) {
   const [prices, setPrices] = useState<FIOExchangeEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -305,43 +338,50 @@ export default function ShipyardDetail({ blueprintName, bom }: ShipyardDetailPro
       </div>
 
       {/* Cherry-pick */}
-      {cherryPick && cherryPick.total > 0 && (
-        <div className={styles.cherryPick}>
-          <div>
-            <span className={styles.cherryLabel}>Cherry-pick</span>
-            <span className={`${styles.statusBadge} ${styles[`status-${cherryAnalysis.status}`]}`} style={{ marginLeft: 'var(--gap-sm)' }}>
-              {STATUS_LABELS[cherryAnalysis.status]}
-              {cherryAnalysis.buildable > 0 && ` ×${cherryAnalysis.buildable}`}
-            </span>
-            <span className={styles.cherryTotal} style={{ marginLeft: 'var(--gap-md)' }}>
-              {formatCurrency(cherryPick.total)}
-            </span>
-            {cheapestExchange && (() => {
-              const bestSingle = exchangeTotals.find(e => e.exchange === cheapestExchange);
-              if (bestSingle && bestSingle.total > cherryPick.total) {
-                const savings = bestSingle.total - cherryPick.total;
-                return (
-                  <span className={styles.cherrySavings} style={{ marginLeft: 'var(--gap-sm)' }}>
-                    Save {formatCurrency(savings)} vs {cheapestExchange}
-                  </span>
-                );
-              }
-              return null;
-            })()}
+      {cherryPick && cherryPick.total > 0 && (() => {
+        const cpBuildable = cherryAnalysis.status === 'full';
+        const verdict = buildCherryVerdict(bom, priceLookup, bestPrices);
+        const bestSingle = cheapestExchange
+          ? exchangeTotals.find(e => e.exchange === cheapestExchange)
+          : null;
+        const savings = bestSingle && bestSingle.total > cherryPick.total
+          ? bestSingle.total - cherryPick.total
+          : null;
+
+        return (
+          <div className={`${styles.cherryPick} ${cpBuildable ? styles.cherryBuildable : ''}`}>
+            <div className={styles.cherryHeader}>
+              <span className={styles.cherryLabel}>Cherry Pick</span>
+              <span className={`${styles.statusBadge} ${styles[`status-${cherryAnalysis.status}`]}`}>
+                {cherryAnalysis.status === 'full' ? 'Buildable' : STATUS_LABELS[cherryAnalysis.status]}
+                {cherryAnalysis.buildable > 0 && ` ×${cherryAnalysis.buildable}`}
+              </span>
+              <span className={styles.cherryNote}>{verdict}</span>
+            </div>
+            <div className={styles.cherryBody}>
+              <div className={styles.cherryTotal}>
+                {formatCurrency(cherryPick.total)}
+              </div>
+              <div className={styles.cherrySources}>
+                {cherrySourceCounts.map(([ex, count]) => (
+                  <span key={ex} className={styles.sourceTag}>{ex} ×{count}</span>
+                ))}
+              </div>
+              {savings !== null && cheapestExchange && (
+                <div className={styles.cherrySavings}>
+                  Save {formatCurrency(savings)} vs {cheapestExchange}
+                </div>
+              )}
+              <button
+                className={`${styles.actBtn} ${copiedId === 'cherry' ? styles.copied : ''}`}
+                onClick={handleCopyCherryACT}
+              >
+                {copiedId === 'cherry' ? 'Copied' : 'Copy ACT (Multi)'}
+              </button>
+            </div>
           </div>
-          <div className={styles.cherrySources}>
-            {cherrySourceCounts.map(([ex, count]) => (
-              <span key={ex} className={styles.sourceTag}>{ex} ×{count}</span>
-            ))}
-          </div>
-          <button
-            className={`${styles.actBtn} ${copiedId === 'cherry' ? styles.copied : ''}`}
-            onClick={handleCopyCherryACT}
-          >
-            {copiedId === 'cherry' ? 'Copied' : 'Copy ACT (Multi)'}
-          </button>
-        </div>
-      )}
+        );
+      })()}
 
       {/* BOM comparison table */}
       <div className={styles.tableWrap}>
