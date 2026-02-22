@@ -4,8 +4,7 @@ import { calculateBOM } from './formulas';
 import Header from './components/Header';
 import { BlueprintCard, NewBlueprintCard } from './components/BlueprintCard';
 import BlueprintEditor from './components/BlueprintEditor';
-import BOMDisplay from './components/BOMDisplay';
-import ExchangePricing from './components/ExchangePricing';
+import ShipyardDetail from './components/ShipyardDetail';
 
 const STORAGE_KEY = 'drydock_blueprints';
 
@@ -115,8 +114,10 @@ export default function App() {
               </h2>
               <button onClick={() => handleEdit(selectedBlueprint.id)}>Edit</button>
             </div>
-            <BOMDisplay bom={selectedBlueprint.bom} />
-            <ExchangePricing bom={selectedBlueprint.bom} />
+            <ShipyardDetail
+              blueprintName={selectedBlueprint.name}
+              bom={selectedBlueprint.bom}
+            />
           </div>
         )}
 
