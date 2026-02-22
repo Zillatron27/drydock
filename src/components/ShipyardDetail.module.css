@@ -21,9 +21,18 @@
   gap: 2px;
 }
 
-.exchangeCard.best {
-  border-color: var(--positive);
-  box-shadow: 0 0 8px rgba(50, 205, 50, 0.15);
+.status-card-full {
+  border-color: var(--signal-ok);
+  box-shadow: 0 0 8px rgba(92, 184, 92, 0.15);
+}
+
+.status-card-partial {
+  border-color: var(--warning);
+  box-shadow: 0 0 8px rgba(255, 165, 0, 0.1);
+}
+
+.status-card-incomplete {
+  border-color: var(--signal-hot);
 }
 
 .cardTop {
@@ -36,16 +45,6 @@
   font-family: var(--font-display);
   font-size: 0.85rem;
   color: var(--text-primary);
-}
-
-.bestBadge {
-  font-size: 0.55rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--positive);
-  border: 1px solid var(--positive);
-  border-radius: var(--radius-sm);
-  padding: 1px 4px;
 }
 
 .cardTotal {

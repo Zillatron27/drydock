@@ -9,6 +9,7 @@ import styles from './ShipyardDetail.module.css';
 interface ShipyardDetailProps {
   blueprintName: string;
   bom: BOMEntry[];
+  onLoadingChange?: (loading: boolean) => void;
 }
 
 // Category display order and labels
@@ -146,7 +147,7 @@ function buildCherryVerdict(
   return `${unavailable} of ${total} unavailable`;
 }
 
-export default function ShipyardDetail({ blueprintName, bom }: ShipyardDetailProps) {
+export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: ShipyardDetailProps) {
   const [prices, setPrices] = useState<FIOExchangeEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -169,6 +170,10 @@ export default function ShipyardDetail({ blueprintName, bom }: ShipyardDetailPro
 
     return () => { cancelled = true; };
   }, [retryCount]);
+
+  useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
 
   const exchangeTotals = useMemo(
     () => prices ? priceBlueprint(bom, prices) : [],
@@ -298,16 +303,15 @@ export default function ShipyardDetail({ blueprintName, bom }: ShipyardDetailPro
       {/* Exchange summary cards */}
       <div className={styles.exchangeGrid}>
         {exchangeTotals.map(ex => {
-          const isBest = ex.exchange === cheapestExchange;
           const total = ex.available + ex.missing;
           const pct = total > 0 ? Math.round((ex.available / total) * 100) : 0;
           const analysis = exchangeAnalyses.get(ex.exchange);
+          const statusClass = analysis ? styles[`status-card-${analysis.status}`] : '';
 
           return (
-            <div key={ex.exchange} className={`${styles.exchangeCard} ${isBest ? styles.best : ''}`}>
+            <div key={ex.exchange} className={`${styles.exchangeCard} ${statusClass}`}>
               <div className={styles.cardTop}>
                 <span className={styles.exchangeCode}>{ex.exchange}</span>
-                {isBest && <span className={styles.bestBadge}>Best</span>}
               </div>
               <div className={styles.cardTotal}>
                 {ex.total > 0 ? formatCurrency(ex.total) : '—'}
