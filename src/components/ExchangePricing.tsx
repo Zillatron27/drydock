@@ -13,6 +13,7 @@ export default function ExchangePricing({ bom }: ExchangePricingProps) {
   const [prices, setPrices] = useState<FIOExchangeEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,7 +35,11 @@ export default function ExchangePricing({ bom }: ExchangePricingProps) {
       });
 
     return () => { cancelled = true; };
-  }, []);
+  }, [retryCount]);
+
+  function handleRetry() {
+    setRetryCount(c => c + 1);
+  }
 
   const exchangeTotals = useMemo(
     () => prices ? priceBlueprint(bom, prices) : [],
@@ -69,7 +74,13 @@ export default function ExchangePricing({ bom }: ExchangePricingProps) {
     return (
       <div className={styles.pricingSection}>
         <span className="panel-header">Exchange Pricing</span>
-        <div className={styles.errorState}>{error}</div>
+        <div className={styles.errorState}>
+          <div>Failed to load exchange prices</div>
+          <div className={styles.errorDetail}>{error}</div>
+          <button onClick={handleRetry} style={{ marginTop: 'var(--gap-sm)' }}>
+            Retry
+          </button>
+        </div>
       </div>
     );
   }

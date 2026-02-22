@@ -27,6 +27,15 @@
   font-size: 0.85rem;
   padding: var(--gap-lg) 0;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-xs);
+}
+
+.errorDetail {
+  font-size: 0.7rem;
+  color: var(--text-muted);
 }
 
 .exchangeGrid {
