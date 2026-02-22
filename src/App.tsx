@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { Blueprint, ModuleSelections } from './types';
 import { calculateBOM } from './formulas';
 import Header from './components/Header';
+import { VERSION } from './version';
 import { BlueprintCard, NewBlueprintCard } from './components/BlueprintCard';
 import BlueprintEditor from './components/BlueprintEditor';
 import ShipyardDetail from './components/ShipyardDetail';
@@ -135,7 +136,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <span>DryDock v0.3.0</span>
+        <span>DryDock v{VERSION}</span>
         <span className="separator">|</span>
         <span>27bit industries</span>
       </footer>

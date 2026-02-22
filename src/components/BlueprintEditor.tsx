@@ -15,7 +15,6 @@ import {
   cargoSlots,
   hullSlots,
   optionalSlots,
-  materialInfo,
 } from '../data/modules';
 import styles from './BlueprintEditor.module.css';
 
@@ -172,11 +171,7 @@ export default function BlueprintEditor({ existingBlueprint, onSave, onCancel }:
                 <AutoRow label="Small FTL Emitters (SFE)" value={emitters.small} />
               )}
               <AutoRow label={`Bridge (${bridge})`} value={1} />
-              <AutoRow
-                label={`Crew Quarters (${crew})`}
-                value={1}
-                detail={materialInfo[crew]?.name}
-              />
+              <AutoRow label={`Crew Quarters (${crew})`} value={1} />
             </div>
           </div>
 

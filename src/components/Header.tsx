@@ -1,3 +1,5 @@
+import { VERSION } from '../version';
+
 interface HeaderProps {
   loading?: boolean;
 }
@@ -24,7 +26,7 @@ export default function Header({ loading = false }: HeaderProps) {
         <h1 className="logo">DRYDOCK</h1>
         <span className="tagline">Ship Blueprint Calculator</span>
       </div>
-      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>v0.3.0</span>
+      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>v{VERSION}</span>
     </header>
   );
 }
