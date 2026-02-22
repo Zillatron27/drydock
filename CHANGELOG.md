@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.1 — Version Consolidation (2026-02-23)
+
+### Features
+- Consolidate version string to single source of truth (`src/version.ts`)
+- Add CHANGELOG.md with backfilled release history
+- Add deploy skill for automated build and Cloudflare Pages deployment
+
+### Bug Fixes
+- Fix exchange status logic and availability display to match APEX_
+- Remove unused materialInfo import from BlueprintEditor
+
 ## 0.3.0 — Exchange Status Overhaul (2026-02-23)
 
 ### Features
