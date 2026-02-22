@@ -1,0 +1,10 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" rx="12" fill="#0a0c0f"/>
+  <!-- Outer hex: flat-top orientation -->
+  <polygon points="64,14 110,38 110,90 64,114 18,90 18,38"
+           stroke="#c4a35a" stroke-width="3" fill="none"/>
+  <!-- Inner hex: 90° rotated (pointy-top) -->
+  <polygon points="64,38 86,51 86,77 64,90 42,77 42,51"
+           stroke="#d4a43a" stroke-width="2.5" fill="rgba(212,164,58,0.04)"
+           transform="rotate(90 64 64)"/>
+</svg>

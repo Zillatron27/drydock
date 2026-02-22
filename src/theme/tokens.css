@@ -1,0 +1,66 @@
+/* APEX_ Design System — extracted for DryDock
+   Source: github.com/Zillatron27/APEX_
+   Dark theme with orange accent */
+
+:root {
+    /* Backgrounds */
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #111111;
+    --bg-tertiary: #1a1a1a;
+    --bg-hover: #1a1a1a;
+
+    /* Text */
+    --text-primary: #e0e0e0;
+    --text-secondary: #666666;
+    --text-muted: #444444;
+
+    /* Accent */
+    --accent: #ff8c00;
+    --accent-hover: #ffaa00;
+    --accent-dim: #cc7000;
+    --accent-glow: rgba(255, 140, 0, 0.3);
+
+    /* Borders */
+    --border: #333333;
+    --border-light: #222222;
+
+    /* Signals */
+    --positive: #32cd32;
+    --negative: #cd5c5c;
+    --warning: #ffa500;
+    --signal-hot: #ff6b6b;
+    --signal-warm: #feca57;
+    --signal-cool: #54a0ff;
+    --signal-ok: #5cb85c;
+
+    /* Ship part category colors (from APEX_) */
+    --cat-ship-engines: #ff5522;
+    --cat-ship-kits: #ffaa22;
+    --cat-ship-parts: #ffcc33;
+    --cat-ship-shields: #ffd34d;
+    --cat-fuels: #a0ff60;
+    --cat-electronic-systems: #9955dd;
+    --cat-construction-materials: #5eaaff;
+    --cat-metals: #b0b0b0;
+    --cat-alloys: #ffaa44;
+    --cat-elements: #c9a06a;
+    --cat-plastics: #ff6be0;
+    --cat-minerals: #e8c9a0;
+    --cat-chemicals: #ff7eb3;
+
+    /* Fonts */
+    --font-display: 'Audiowide', cursive;
+    --font-mono: 'IBM Plex Mono', monospace;
+
+    /* Spacing */
+    --gap-xs: 0.25rem;
+    --gap-sm: 0.5rem;
+    --gap-md: 1rem;
+    --gap-lg: 1.5rem;
+    --gap-xl: 2rem;
+
+    /* Borders */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+}
