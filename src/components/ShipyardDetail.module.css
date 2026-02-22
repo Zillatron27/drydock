@@ -54,9 +54,35 @@
   font-variant-numeric: tabular-nums;
 }
 
-.cardAvail {
-  font-size: 0.6rem;
+/* Availability bar */
+.cardAvailability {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+}
+
+.pctBar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-primary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.pctBarFill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.pctFull { background: var(--signal-ok); box-shadow: 0 0 4px rgba(92, 184, 92, 0.4); }
+.pctPartial { background: var(--warning); box-shadow: 0 0 4px rgba(255, 165, 0, 0.4); }
+.pctLow { background: var(--signal-hot); box-shadow: 0 0 4px rgba(255, 107, 107, 0.4); }
+
+.pctText {
+  font-size: 0.75rem;
   color: var(--text-secondary);
+  min-width: 30px;
+  text-align: right;
 }
 
 /* Status badges and line counts */

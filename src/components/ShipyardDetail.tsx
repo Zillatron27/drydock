@@ -36,6 +36,7 @@ interface ExchangeAnalysis {
   linesFull: number;
   linesPartial: number;
   linesUnavailable: number;
+  availabilityPct: number;  // percentage of BOM lines where supply >= quantity needed
 }
 
 /** Analyze supply availability for a BOM at one exchange */
@@ -66,16 +67,18 @@ function analyzeExchange(
   }
 
   const buildable = bom.length > 0 ? minBuildable : 0;
+  const availabilityPct = bom.length > 0 ? (linesFull / bom.length * 100) : 0;
+
   let status: BuildStatus;
-  if (linesUnavailable === 0 && linesPartial === 0) {
-    status = 'full';
-  } else if (linesUnavailable === bom.length) {
+  if (linesUnavailable > 0) {
     status = 'incomplete';
-  } else {
+  } else if (linesPartial > 0) {
     status = 'partial';
+  } else {
+    status = 'full';
   }
 
-  return { exchange, status, buildable, linesFull, linesPartial, linesUnavailable };
+  return { exchange, status, buildable, linesFull, linesPartial, linesUnavailable, availabilityPct };
 }
 
 /** Analyze cherry-pick supply: can we build from the combined best sources? */
@@ -303,8 +306,6 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
       {/* Exchange summary cards */}
       <div className={styles.exchangeGrid}>
         {exchangeTotals.map(ex => {
-          const total = ex.available + ex.missing;
-          const pct = total > 0 ? Math.round((ex.available / total) * 100) : 0;
           const analysis = exchangeAnalyses.get(ex.exchange);
           const statusClass = analysis ? styles[`status-card-${analysis.status}`] : '';
 
@@ -317,6 +318,21 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
                 {ex.total > 0 ? formatCurrency(ex.total) : '—'}
               </div>
               {analysis && (
+                <div className={styles.cardAvailability}>
+                  <div className={styles.pctBar}>
+                    <div
+                      className={`${styles.pctBarFill} ${
+                        analysis.availabilityPct === 100 ? styles.pctFull
+                        : analysis.availabilityPct >= 50 ? styles.pctPartial
+                        : styles.pctLow
+                      }`}
+                      style={{ width: `${analysis.availabilityPct}%` }}
+                    />
+                  </div>
+                  <span className={styles.pctText}>{Math.round(analysis.availabilityPct)}%</span>
+                </div>
+              )}
+              {analysis && (
                 <div className={styles.cardStatus}>
                   <span className={`${styles.statusBadge} ${styles[`status-${analysis.status}`]}`}>
                     {STATUS_LABELS[analysis.status]}
@@ -327,9 +343,6 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
                   </span>
                 </div>
               )}
-              <div className={styles.cardAvail}>
-                {pct}% available ({ex.available}/{total})
-              </div>
               <button
                 className={`${styles.actBtn} ${copiedId === ex.exchange ? styles.copied : ''}`}
                 onClick={() => handleCopyACT(ex.exchange)}
