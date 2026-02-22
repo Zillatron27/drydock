@@ -1,0 +1,77 @@
+.blueprintCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+  min-width: 200px;
+  min-height: 120px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardName {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+
+.deleteBtn {
+  padding: 2px 6px;
+  font-size: 1rem;
+  line-height: 1;
+  background: transparent;
+  border: none;
+}
+
+.cardStats {
+  display: flex;
+  gap: var(--gap-lg);
+  margin-top: auto;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.statLabel {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statValue {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.newCard {
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  border-color: var(--border);
+  gap: var(--gap-xs);
+}
+
+.newCard:hover {
+  border-color: var(--accent-dim);
+}
+
+.plusIcon {
+  font-size: 2rem;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.newCard:hover .plusIcon {
+  color: var(--accent);
+}
+
+.newLabel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}

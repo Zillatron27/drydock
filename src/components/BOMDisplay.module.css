@@ -1,0 +1,62 @@
+.bomDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+}
+
+.bomHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.bomSummary {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.bomGroups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+}
+
+.bomGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+}
+
+.groupLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.groupItems {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bomEntry {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: 3px 0;
+}
+
+.entryName {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.entryQty {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  min-width: 50px;
+  text-align: right;
+}

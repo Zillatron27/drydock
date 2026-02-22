@@ -1,0 +1,177 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: var(--gap-lg);
+}
+
+.editor {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.editorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gap-md) var(--gap-lg);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.editorTitle {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  padding: 2px 6px;
+}
+
+.editorBody {
+  padding: var(--gap-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-lg);
+}
+
+.nameInput {
+  width: 100%;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-bottom: var(--gap-xs);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.slotRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-md);
+}
+
+.slotLabel {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.slotSelect {
+  flex: 1;
+  max-width: 240px;
+}
+
+.autoSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+}
+
+.autoRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-md);
+  font-size: 0.8rem;
+}
+
+.autoLabel {
+  color: var(--text-secondary);
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.autoValue {
+  color: var(--text-primary);
+}
+
+.volumeSummary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap-sm);
+  padding: var(--gap-sm) var(--gap-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.volumeLabel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.volumeValue {
+  font-size: 1.1rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.editorFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gap-sm);
+  padding: var(--gap-md) var(--gap-lg);
+  border-top: 1px solid var(--border-light);
+}
+
+@media (max-width: 600px) {
+  .overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .editor {
+    border-radius: 0;
+    max-height: 100vh;
+  }
+
+  .slotRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--gap-xs);
+  }
+
+  .slotLabel {
+    min-width: unset;
+  }
+
+  .slotSelect {
+    max-width: none;
+  }
+
+  .autoRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .autoLabel {
+    min-width: unset;
+  }
+}
