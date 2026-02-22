@@ -27,6 +27,7 @@ export default function App() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pricesLoading, setPricesLoading] = useState(false);
 
   const selectedBlueprint = blueprints.find(b => b.id === selectedId) ?? null;
   const editingBlueprint = blueprints.find(b => b.id === editingId);
@@ -87,7 +88,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header />
+      <Header loading={pricesLoading} />
 
       <main className="main">
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gap-md)', marginBottom: 'var(--gap-xl)' }}>
@@ -117,6 +118,7 @@ export default function App() {
             <ShipyardDetail
               blueprintName={selectedBlueprint.name}
               bom={selectedBlueprint.bom}
+              onLoadingChange={setPricesLoading}
             />
           </div>
         )}
@@ -133,7 +135,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <span>DryDock v0.2.0</span>
+        <span>DryDock v0.3.0</span>
         <span className="separator">|</span>
         <span>27bit industries</span>
       </footer>

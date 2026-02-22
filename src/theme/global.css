@@ -196,7 +196,7 @@ button.danger:hover {
 
 .header-brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--gap-md);
 }
 
@@ -210,6 +210,46 @@ button.danger:hover {
 .tagline {
   font-size: 0.75rem;
   color: var(--text-secondary);
+}
+
+/* Header icon — double hex spinner */
+@keyframes hex-spin {
+  to { transform: rotate(360deg); }
+}
+
+.header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header-icon svg {
+  display: block;
+}
+
+.header-icon .hex-outer,
+.header-icon .hex-inner {
+  transform-origin: 64px 64px;
+  animation: none;
+}
+
+/* Spin on hover */
+.header-brand:hover .hex-outer {
+  animation: hex-spin 1.8s linear infinite;
+}
+
+.header-brand:hover .hex-inner {
+  animation: hex-spin 0.7s linear infinite reverse;
+}
+
+/* Spin while loading */
+.header-icon.loading .hex-outer {
+  animation: hex-spin 1.8s linear infinite;
+}
+
+.header-icon.loading .hex-inner {
+  animation: hex-spin 0.7s linear infinite reverse;
 }
 
 /* Footer */
