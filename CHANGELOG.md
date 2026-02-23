@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1 — Cherry Pick Cost Breakdown (2026-02-23)
+
+### Features
+- Per-exchange cost subtotals in cherry pick panel showing spend at each sourcing exchange
+- Amber-bordered badges visually distinct from grey source count tags
+
 ## 0.4.0 — Blueprint Import/Export (2026-02-23)
 
 ### Features
