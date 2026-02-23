@@ -5,11 +5,10 @@ export interface ModuleSlot {
   required: boolean;
 }
 
-/** One option within a slot (e.g. "Standard" engine → ENG, 239m³) */
+/** One option within a slot (e.g. "Standard" engine → ENG) */
 export interface ModuleOption {
   name: string;
   ticker: string;
-  volume: number;
 }
 
 /** User's module selections for a complete blueprint */
@@ -107,6 +106,13 @@ export interface EmitterCounts {
   small: number;   // SFE
   medium: number;  // MFE
   large: number;   // LFE
+}
+
+/** Computed ship statistics */
+export interface ShipStats {
+  totalVolume: number;
+  operatingEmptyMass: number;
+  buildTime: number;
 }
 
 /** Single blueprint export JSON */

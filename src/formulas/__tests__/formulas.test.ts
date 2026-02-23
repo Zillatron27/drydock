@@ -7,11 +7,13 @@ import {
   getBridge,
   getCrewQuarters,
   calculateBOM,
+  calculateMass,
+  calculateBuildTime,
 } from '../index';
 import type { ModuleSelections } from '../../types';
 
 // -- Verified ship volumes and SSC counts --
-// Source: spec verified ceil(V/21) against 13 in-game screenshots
+// Source: in-game screenshots, validated ceil(V/21) across 13 ships
 const sscCases: Array<[string, number, number]> = [
   ['ENG+SSL+SCB', 834, 40],
   ['ENG+MSL+SCB', 960, 46],
@@ -75,7 +77,8 @@ describe('calculatePlates', () => {
 });
 
 describe('calculateEmitters', () => {
-  // Greedy cover: LFE=1050, MFE=260, SFE=100
+  // Diminishing-multiplier algorithm: LFE=floor(V/1000), rem=V%1000,
+  // working=rem*20/(10+LFE), MFE=floor(working/500), SFE=ceil(leftover/250)
   // Format: [label, volume, expectedLarge, expectedMedium, expectedSmall]
   const emitterCases: Array<[string, number, number, number, number]> = [
     ['834m³ (STL only)', 834, 0, 3, 1],
@@ -97,7 +100,8 @@ describe('calculateEmitters', () => {
   );
 
   it('handles exact LFE multiples', () => {
-    const result = calculateEmitters(2100);
+    // 2000 / 1000 = 2 LFE, remainder 0 → no MFE/SFE needed
+    const result = calculateEmitters(2000);
     expect(result.large).toBe(2);
     expect(result.medium).toBe(0);
     expect(result.small).toBe(0);
@@ -134,42 +138,44 @@ describe('getBridge', () => {
 });
 
 describe('getCrewQuarters', () => {
-  it('returns CQT for volume < 1000', () => {
+  it('returns CQT for volume <= 834', () => {
     expect(getCrewQuarters(834)).toBe('CQT');
-    expect(getCrewQuarters(960)).toBe('CQT');
+    expect(getCrewQuarters(500)).toBe('CQT');
   });
 
-  it('returns CQS for 1000 <= volume < 2000', () => {
+  it('returns CQS for 835 <= volume <= 2533', () => {
+    expect(getCrewQuarters(960)).toBe('CQS');
     expect(getCrewQuarters(1485)).toBe('CQS');
     expect(getCrewQuarters(1611)).toBe('CQS');
   });
 
-  it('returns CQM for 2000 <= volume < 3000', () => {
+  it('returns CQM for 2534 <= volume <= 3587', () => {
     expect(getCrewQuarters(2535)).toBe('CQM');
     expect(getCrewQuarters(2819)).toBe('CQM');
+    expect(getCrewQuarters(3584)).toBe('CQM');
   });
 
-  it('returns CQL for volume >= 3000', () => {
-    expect(getCrewQuarters(3584)).toBe('CQL');
+  it('returns CQL for volume > 3587', () => {
+    expect(getCrewQuarters(3588)).toBe('CQL');
     expect(getCrewQuarters(5838)).toBe('CQL');
   });
 
   it('handles exact boundaries', () => {
-    expect(getCrewQuarters(999)).toBe('CQT');
-    expect(getCrewQuarters(1000)).toBe('CQS');
-    expect(getCrewQuarters(1999)).toBe('CQS');
-    expect(getCrewQuarters(2000)).toBe('CQM');
-    expect(getCrewQuarters(2999)).toBe('CQM');
-    expect(getCrewQuarters(3000)).toBe('CQL');
+    expect(getCrewQuarters(834)).toBe('CQT');
+    expect(getCrewQuarters(835)).toBe('CQS');
+    expect(getCrewQuarters(2533)).toBe('CQS');
+    expect(getCrewQuarters(2534)).toBe('CQM');
+    expect(getCrewQuarters(3587)).toBe('CQM');
+    expect(getCrewQuarters(3588)).toBe('CQL');
   });
 });
 
 describe('calculateVolume', () => {
   it('calculates STL-only ship volume', () => {
     const selections: ModuleSelections = {
-      stlEngine: 'ENG',       // 239
-      stlFuelTank: 'SSL',     // 70
-      cargoBay: 'SCB',        // 525
+      stlEngine: 'ENG',
+      stlFuelTank: 'SSL',
+      cargoBay: 'SCB',
       ftlReactor: null,
       ftlFuelTank: null,
       hullPlates: 'BHP',
@@ -180,15 +186,16 @@ describe('calculateVolume', () => {
       selfRepairDrones: null,
       highGSeats: null,
     };
+    // delta: 963 + 0 + 0 + 0 + 0 + (-129) = 834
     expect(calculateVolume(selections)).toBe(834);
   });
 
   it('calculates FTL ship volume', () => {
     const selections: ModuleSelections = {
-      stlEngine: 'ENG',       // 239
-      stlFuelTank: 'MSL',     // 196
-      cargoBay: 'MCB',        // 1050
-      ftlReactor: 'RCT',      // 126
+      stlEngine: 'ENG',
+      stlFuelTank: 'MSL',
+      cargoBay: 'MCB',
+      ftlReactor: 'RCT',
       ftlFuelTank: null,
       hullPlates: 'LHP',
       heatShielding: null,
@@ -198,16 +205,17 @@ describe('calculateVolume', () => {
       selfRepairDrones: null,
       highGSeats: null,
     };
-    expect(calculateVolume(selections)).toBe(1611);
+    // delta: 963 + 0 + 126 + 525 + 0 + 0 = 1614
+    expect(calculateVolume(selections)).toBe(1614);
   });
 
   it('includes FTL fuel tank volume', () => {
     const selections: ModuleSelections = {
-      stlEngine: 'FSE',       // 238
-      stlFuelTank: 'MSL',     // 196
-      cargoBay: 'MCB',        // 1050
-      ftlReactor: 'HPR',      // 243
-      ftlFuelTank: 'MFL',     // 9
+      stlEngine: 'FSE',
+      stlFuelTank: 'MSL',
+      cargoBay: 'MCB',
+      ftlReactor: 'HPR',
+      ftlFuelTank: 'MFL',
       hullPlates: 'BHP',
       heatShielding: null,
       whippleShielding: null,
@@ -216,6 +224,7 @@ describe('calculateVolume', () => {
       selfRepairDrones: null,
       highGSeats: null,
     };
+    // delta: 963 + (-1) + 126 + 525 + 117 + 6 = 1736
     expect(calculateVolume(selections)).toBe(1736);
   });
 
@@ -240,6 +249,9 @@ describe('calculateVolume', () => {
       highGSeats: 'AGS',
       stabilitySystem: 'STS',
     };
+    // delta: 963 + 0 + 126 + 4725 + 7 + 0 = 5821
+    // Optional equipment deltas are all 0
+    expect(calculateVolume(base)).toBe(5821);
     expect(calculateVolume(base)).toBe(calculateVolume(withOptional));
   });
 });
@@ -271,7 +283,7 @@ describe('calculateBOM', () => {
     expect(byTicker['BHP']).toBe(calculatePlates(834));
     expect(byTicker['SSC']).toBe(calculateSSC(834));
     expect(byTicker['BRS']).toBe(1);    // no FTL → BRS
-    expect(byTicker['CQT']).toBe(1);    // vol < 1000
+    expect(byTicker['CQT']).toBe(1);    // vol <= 834
 
     // No FTL components
     expect(byTicker['FFC']).toBeUndefined();
@@ -282,10 +294,10 @@ describe('calculateBOM', () => {
 
   it('builds correct BOM for FTL ship with shields', () => {
     const selections: ModuleSelections = {
-      stlEngine: 'ENG',       // 239
-      stlFuelTank: 'MSL',     // 196
-      cargoBay: 'HCB',        // 5250
-      ftlReactor: 'QCR',      // 133
+      stlEngine: 'ENG',
+      stlFuelTank: 'MSL',
+      cargoBay: 'HCB',
+      ftlReactor: 'QCR',
       ftlFuelTank: null,
       hullPlates: 'LHP',
       heatShielding: null,
@@ -299,15 +311,15 @@ describe('calculateBOM', () => {
     const bom = calculateBOM(selections);
     const byTicker = Object.fromEntries(bom.map(e => [e.ticker, e.quantity]));
 
-    // vol = 239 + 196 + 5250 + 133 = 5818
-    const vol = 5818;
+    // delta: 963 + 0 + 126 + 4725 + 0 + 7 = 5821
+    const vol = 5821;
     const plates = calculatePlates(vol);
     expect(byTicker['LHP']).toBe(plates);
     expect(byTicker['AWH']).toBe(plates);   // shield count = plate count
     expect(byTicker['SSC']).toBe(calculateSSC(vol));
     expect(byTicker['FFC']).toBe(1);
     expect(byTicker['BR1']).toBe(1);   // QCR → BR1
-    expect(byTicker['CQL']).toBe(1);   // vol >= 3000
+    expect(byTicker['CQL']).toBe(1);   // vol > 3587
   });
 
   it('includes optional equipment as 1 unit', () => {
@@ -352,8 +364,8 @@ describe('calculateBOM', () => {
 
     const bom = calculateBOM(selections);
     const byTicker = Object.fromEntries(bom.map(e => [e.ticker, e.quantity]));
-    const vol = 239 + 196 + 1050; // 1485
-    const plates = calculatePlates(vol);
+    // delta: 963 + 0 + 126 + 525 + 0 + (-129) = 1485
+    const plates = calculatePlates(1485);
 
     expect(byTicker['BHP']).toBe(plates);
     expect(byTicker['APT']).toBe(plates);
@@ -363,11 +375,11 @@ describe('calculateBOM', () => {
 
   it('includes FTL emitters when reactor equipped', () => {
     const selections: ModuleSelections = {
-      stlEngine: 'ENG',       // 239
-      stlFuelTank: 'MSL',     // 196
-      cargoBay: 'LCB',        // 2100
-      ftlReactor: 'QCR',      // 133
-      ftlFuelTank: 'MFL',     // 9
+      stlEngine: 'ENG',
+      stlFuelTank: 'MSL',
+      cargoBay: 'LCB',
+      ftlReactor: 'QCR',
+      ftlFuelTank: 'MFL',
       hullPlates: 'LHP',
       heatShielding: null,
       whippleShielding: null,
@@ -379,12 +391,67 @@ describe('calculateBOM', () => {
 
     const bom = calculateBOM(selections);
     const byTicker = Object.fromEntries(bom.map(e => [e.ticker, e.quantity]));
-    const vol = 239 + 196 + 2100 + 133 + 9; // 2677
-    const emitters = calculateEmitters(vol);
+    // delta: 963 + 0 + 126 + 1575 + 0 + 7 + 6 = 2677
+    const emitters = calculateEmitters(2677);
 
     expect(byTicker['FFC']).toBe(1);
     expect(byTicker['LFE']).toBe(emitters.large);
     expect(byTicker['MFE']).toBe(emitters.medium);
     expect(byTicker['SFE']).toBe(emitters.small);
+  });
+});
+
+describe('calculateMass', () => {
+  it('computes exact mass for VOL-BASE reference ship', () => {
+    // Reference ship: ENG + SSL + RCT + SFL + SCB + BHP → vol=963, mass=827.8
+    const selections: ModuleSelections = {
+      stlEngine: 'ENG',
+      stlFuelTank: 'SSL',
+      cargoBay: 'SCB',
+      ftlReactor: 'RCT',
+      ftlFuelTank: 'SFL',
+      hullPlates: 'BHP',
+      heatShielding: null,
+      whippleShielding: null,
+      stabilitySystem: null,
+      radiationShielding: null,
+      selfRepairDrones: null,
+      highGSeats: null,
+    };
+    const volume = calculateVolume(selections);
+    expect(volume).toBe(963);
+    // Verified: sum(bomWeight × quantity) = 827.8 exactly
+    expect(calculateMass(selections, volume)).toBeCloseTo(827.8, 1);
+  });
+
+  it('computes mass for STL-only ship', () => {
+    const selections: ModuleSelections = {
+      stlEngine: 'ENG',
+      stlFuelTank: 'SSL',
+      cargoBay: 'SCB',
+      ftlReactor: null,
+      ftlFuelTank: null,
+      hullPlates: 'BHP',
+      heatShielding: null,
+      whippleShielding: null,
+      stabilitySystem: null,
+      radiationShielding: null,
+      selfRepairDrones: null,
+      highGSeats: null,
+    };
+    const volume = calculateVolume(selections);
+    expect(volume).toBe(834);
+    const mass = calculateMass(selections, volume);
+    // No FTL components → lighter than reference ship
+    expect(mass).toBeGreaterThan(0);
+    expect(mass).toBeLessThan(827.8);
+  });
+});
+
+describe('calculateBuildTime', () => {
+  it('returns mass / 50', () => {
+    expect(calculateBuildTime(827.8)).toBeCloseTo(16.556, 2);
+    expect(calculateBuildTime(500)).toBe(10);
+    expect(calculateBuildTime(0)).toBe(0);
   });
 });

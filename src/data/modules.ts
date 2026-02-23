@@ -5,11 +5,11 @@ import type { ModuleSlot, MaterialCategory } from '../types';
 export const stlEngine: ModuleSlot = {
   name: 'STL Engine',
   options: [
-    { name: 'Standard', ticker: 'ENG', volume: 239 },
-    { name: 'Fuel-saving', ticker: 'FSE', volume: 238 },
-    { name: 'Glass', ticker: 'GEN', volume: 238 },
-    { name: 'Advanced', ticker: 'AEN', volume: 452 },
-    { name: 'Hyperthrust', ticker: 'HTE', volume: 456 },
+    { name: 'Standard', ticker: 'ENG' },
+    { name: 'Fuel-saving', ticker: 'FSE' },
+    { name: 'Glass', ticker: 'GEN' },
+    { name: 'Advanced', ticker: 'AEN' },
+    { name: 'Hyperthrust', ticker: 'HTE' },
   ],
   required: true,
 };
@@ -17,9 +17,9 @@ export const stlEngine: ModuleSlot = {
 export const stlFuelTank: ModuleSlot = {
   name: 'STL Fuel Tank',
   options: [
-    { name: 'Small', ticker: 'SSL', volume: 70 },
-    { name: 'Medium', ticker: 'MSL', volume: 196 },
-    { name: 'Large', ticker: 'LSL', volume: 480 },
+    { name: 'Small', ticker: 'SSL' },
+    { name: 'Medium', ticker: 'MSL' },
+    { name: 'Large', ticker: 'LSL' },
   ],
   required: true,
 };
@@ -27,10 +27,10 @@ export const stlFuelTank: ModuleSlot = {
 export const ftlReactor: ModuleSlot = {
   name: 'FTL Reactor',
   options: [
-    { name: 'Standard', ticker: 'RCT', volume: 126 },
-    { name: 'Quick-charge', ticker: 'QCR', volume: 133 },
-    { name: 'High-power', ticker: 'HPR', volume: 243 },
-    { name: 'Hyper-power', ticker: 'HYR', volume: 253 },
+    { name: 'Standard', ticker: 'RCT' },
+    { name: 'Quick-charge', ticker: 'QCR' },
+    { name: 'High-power', ticker: 'HPR' },
+    { name: 'Hyper-power', ticker: 'HYR' },
   ],
   required: false,
 };
@@ -38,9 +38,9 @@ export const ftlReactor: ModuleSlot = {
 export const ftlFuelTank: ModuleSlot = {
   name: 'FTL Fuel Tank',
   options: [
-    { name: 'Small', ticker: 'SFL', volume: 3 },
-    { name: 'Medium', ticker: 'MFL', volume: 9 },
-    { name: 'Large', ticker: 'LFL', volume: 21 },
+    { name: 'Small', ticker: 'SFL' },
+    { name: 'Medium', ticker: 'MFL' },
+    { name: 'Large', ticker: 'LFL' },
   ],
   required: false,
 };
@@ -50,14 +50,14 @@ export const ftlFuelTank: ModuleSlot = {
 export const cargoBay: ModuleSlot = {
   name: 'Cargo Bay',
   options: [
-    { name: 'Tiny', ticker: 'TCB', volume: 105 },
-    { name: 'Very Small', ticker: 'VSC', volume: 263 },
-    { name: 'Small', ticker: 'SCB', volume: 525 },
-    { name: 'Medium', ticker: 'MCB', volume: 1050 },
-    { name: 'Large', ticker: 'LCB', volume: 2100 },
-    { name: 'High-Load', ticker: 'WCB', volume: 1050 },
-    { name: 'High-Volume', ticker: 'VCB', volume: 3150 },
-    { name: 'Huge', ticker: 'HCB', volume: 5250 },
+    { name: 'Tiny', ticker: 'TCB' },
+    { name: 'Very Small', ticker: 'VSC' },
+    { name: 'Small', ticker: 'SCB' },
+    { name: 'Medium', ticker: 'MCB' },
+    { name: 'Large', ticker: 'LCB' },
+    { name: 'High-Load', ticker: 'WCB' },
+    { name: 'High-Volume', ticker: 'VCB' },
+    { name: 'Huge', ticker: 'HCB' },
   ],
   required: true,
 };
@@ -67,11 +67,11 @@ export const cargoBay: ModuleSlot = {
 export const hullPlates: ModuleSlot = {
   name: 'Hull Plates',
   options: [
-    { name: 'Basic', ticker: 'BHP', volume: 0 },
-    { name: 'Lightweight', ticker: 'LHP', volume: 0 },
-    { name: 'Reinforced', ticker: 'RHP', volume: 0 },
-    { name: 'Hardened', ticker: 'HHP', volume: 0 },
-    { name: 'Advanced', ticker: 'AHP', volume: 0 },
+    { name: 'Basic', ticker: 'BHP' },
+    { name: 'Lightweight', ticker: 'LHP' },
+    { name: 'Reinforced', ticker: 'RHP' },
+    { name: 'Hardened', ticker: 'HHP' },
+    { name: 'Advanced', ticker: 'AHP' },
   ],
   required: true,
 };
@@ -79,8 +79,8 @@ export const hullPlates: ModuleSlot = {
 export const heatShielding: ModuleSlot = {
   name: 'Heat Shielding',
   options: [
-    { name: 'Basic', ticker: 'BPT', volume: 0 },
-    { name: 'Advanced', ticker: 'APT', volume: 0 },
+    { name: 'Basic', ticker: 'BPT' },
+    { name: 'Advanced', ticker: 'APT' },
   ],
   required: false,
 };
@@ -88,8 +88,8 @@ export const heatShielding: ModuleSlot = {
 export const whippleShielding: ModuleSlot = {
   name: 'Whipple Shielding',
   options: [
-    { name: 'Basic', ticker: 'BWH', volume: 0 },
-    { name: 'Advanced', ticker: 'AWH', volume: 0 },
+    { name: 'Basic', ticker: 'BWH' },
+    { name: 'Advanced', ticker: 'AWH' },
   ],
   required: false,
 };
@@ -97,7 +97,7 @@ export const whippleShielding: ModuleSlot = {
 export const stabilitySystem: ModuleSlot = {
   name: 'Stability System',
   options: [
-    { name: 'Stability Support System', ticker: 'STS', volume: 0 },
+    { name: 'Stability Support System', ticker: 'STS' },
   ],
   required: false,
 };
@@ -105,20 +105,20 @@ export const stabilitySystem: ModuleSlot = {
 export const radiationShielding: ModuleSlot = {
   name: 'Radiation Shielding',
   options: [
-    { name: 'Basic', ticker: 'BRP', volume: 0 },
-    { name: 'Specialized', ticker: 'SRP', volume: 0 },
-    { name: 'Advanced', ticker: 'ARP', volume: 0 },
+    { name: 'Basic', ticker: 'BRP' },
+    { name: 'Specialized', ticker: 'SRP' },
+    { name: 'Advanced', ticker: 'ARP' },
   ],
   required: false,
 };
 
-// -- Optional Equipment (1 unit each, no volume contribution) --
+// -- Optional Equipment (1 unit each) --
 
 export const selfRepairDrones: ModuleSlot = {
   name: 'Self-repair Drones',
   options: [
-    { name: 'Small', ticker: 'RDS', volume: 0 },
-    { name: 'Large', ticker: 'RDL', volume: 0 },
+    { name: 'Small', ticker: 'RDS' },
+    { name: 'Large', ticker: 'RDL' },
   ],
   required: false,
 };
@@ -126,8 +126,8 @@ export const selfRepairDrones: ModuleSlot = {
 export const highGSeats: ModuleSlot = {
   name: 'High-G Seats',
   options: [
-    { name: 'Basic', ticker: 'BGS', volume: 0 },
-    { name: 'Advanced', ticker: 'AGS', volume: 0 },
+    { name: 'Basic', ticker: 'BGS' },
+    { name: 'Advanced', ticker: 'AGS' },
   ],
   required: false,
 };
@@ -220,15 +220,3 @@ export const materialInfo: Record<string, { name: string; category: MaterialCate
   CQM: { name: 'Crew Quarters (Medium)', category: 'unit_prefabs' },
   CQL: { name: 'Crew Quarters (Large)', category: 'unit_prefabs' },
 };
-
-// -- Lookup helpers --
-
-/** Get volume for a ticker from the module catalog. Returns 0 for unknown/zero-volume items. */
-export function getVolume(ticker: string): number {
-  const allSlots = [...driveSlots, ...cargoSlots, ...hullSlots, ...optionalSlots];
-  for (const slot of allSlots) {
-    const option = slot.options.find(o => o.ticker === ticker);
-    if (option) return option.volume;
-  }
-  return 0;
-}
