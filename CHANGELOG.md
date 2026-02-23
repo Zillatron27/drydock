@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.0 — Ship Stats Dashboard (2026-02-23)
+
+### Features
+- Add StatsPanel between blueprint header and pricing — displays computed ship performance stats
+- Ship overview: volume, mass, build time, max G
+- Cargo section: volume and weight capacity from cargo bay
+- STL drive: fuel usage and fuel capacity
+- FTL drive (conditional): reactor power, charge factor, fuel capacity, emitter breakdown, volume span, power requirement
+- Shielding (conditional): general, heat, whipple, gravity, radiation percentages
+- Replace approximate ship model with validated wire-captured module data (bomWeight, bomVolume, modifiers)
+- Mass calculation now uses exact BOM weight summation (zero error across 24 in-game blueprints)
+- Volume calculation uses delta model validated against 23 in-game blueprints
+- Emitter algorithm validated against 47 FTL ships
+
 ## 0.5.0 — Preset Blueprints (2026-02-23)
 
 ### Features
