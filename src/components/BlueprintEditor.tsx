@@ -16,6 +16,7 @@ import {
   hullSlots,
   optionalSlots,
 } from '../data/modules';
+import StatsPanel from './StatsPanel';
 import styles from './BlueprintEditor.module.css';
 
 // Map slot name → ModuleSelections key
@@ -141,10 +142,7 @@ export default function BlueprintEditor({ existingBlueprint, onSave, onCancel }:
           {renderSection('Hull & Shielding', [...hullSlots])}
           {renderSection('Optional Equipment', [...optionalSlots])}
 
-          <div className={styles.volumeSummary}>
-            <span className={styles.volumeLabel}>Total Volume</span>
-            <span className={styles.volumeValue}>{volume.toLocaleString()} m³</span>
-          </div>
+          <StatsPanel selections={selections} />
 
           <div className={styles.section}>
             <div className={styles.sectionTitle}>Auto-calculated Components</div>

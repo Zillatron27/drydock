@@ -111,26 +111,6 @@
   color: var(--text-primary);
 }
 
-.volumeSummary {
-  display: flex;
-  align-items: baseline;
-  gap: var(--gap-sm);
-  padding: var(--gap-sm) var(--gap-md);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-sm);
-}
-
-.volumeLabel {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-}
-
-.volumeValue {
-  font-size: 1.1rem;
-  color: var(--accent);
-  font-weight: 600;
-}
 
 .editorFooter {
   display: flex;
