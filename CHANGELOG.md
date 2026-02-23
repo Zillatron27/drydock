@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.2 — FIO Category Alignment (2026-02-23)
+
+### Bug Fixes
+- Fix 18 material category classifications to match FIO API `/material/allmaterials`
+- SSC now displays under Ship Parts instead of Construction Materials
+- Fuel tanks (SSL/MSL/LSL, SFL/MFL/LFL) now classified as Ship Kits
+- FTL emitters (SFE/MFE/LFE) now classified as Ship Engines
+- High-G seats (BGS/AGS) now classified as Ship Parts
+- Bridges (BRS/BR1/BR2) and crew quarters (CQT/CQS/CQM/CQL) now classified as Unit Prefabs
+- Self-repair drones (RDS/RDL) now classified as Unit Prefabs
+- Add `unit_prefabs` category with teal-grey color token from APEX_ design system
+
 ## 0.4.1 — Cherry Pick Cost Breakdown (2026-02-23)
 
 ### Features
