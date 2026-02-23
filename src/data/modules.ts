@@ -150,9 +150,9 @@ export const materialInfo: Record<string, { name: string; category: MaterialCate
   HTE: { name: 'Hyperthrust Engine', category: 'ship_engines' },
 
   // STL Fuel Tanks
-  SSL: { name: 'Small STL Fuel Tank', category: 'fuels' },
-  MSL: { name: 'Medium STL Fuel Tank', category: 'fuels' },
-  LSL: { name: 'Large STL Fuel Tank', category: 'fuels' },
+  SSL: { name: 'Small STL Fuel Tank', category: 'ship_kits' },
+  MSL: { name: 'Medium STL Fuel Tank', category: 'ship_kits' },
+  LSL: { name: 'Large STL Fuel Tank', category: 'ship_kits' },
 
   // FTL Reactors
   RCT: { name: 'Standard FTL Reactor', category: 'ship_engines' },
@@ -161,9 +161,9 @@ export const materialInfo: Record<string, { name: string; category: MaterialCate
   HYR: { name: 'Hyper-power FTL Reactor', category: 'ship_engines' },
 
   // FTL Fuel Tanks
-  SFL: { name: 'Small FTL Fuel Tank', category: 'fuels' },
-  MFL: { name: 'Medium FTL Fuel Tank', category: 'fuels' },
-  LFL: { name: 'Large FTL Fuel Tank', category: 'fuels' },
+  SFL: { name: 'Small FTL Fuel Tank', category: 'ship_kits' },
+  MFL: { name: 'Medium FTL Fuel Tank', category: 'ship_kits' },
+  LFL: { name: 'Large FTL Fuel Tank', category: 'ship_kits' },
 
   // Cargo Bays
   TCB: { name: 'Tiny Cargo Bay', category: 'ship_kits' },
@@ -199,26 +199,26 @@ export const materialInfo: Record<string, { name: string; category: MaterialCate
   ARP: { name: 'Advanced Radiation Protection', category: 'ship_shields' },
 
   // Self-repair Drones
-  RDS: { name: 'Small Self-repair Drones', category: 'electronic_systems' },
-  RDL: { name: 'Large Self-repair Drones', category: 'electronic_systems' },
+  RDS: { name: 'Small Self-repair Drones', category: 'unit_prefabs' },
+  RDL: { name: 'Large Self-repair Drones', category: 'unit_prefabs' },
 
   // High-G Seats
-  BGS: { name: 'Basic High-G Seats', category: 'ship_kits' },
-  AGS: { name: 'Advanced High-G Seats', category: 'ship_kits' },
+  BGS: { name: 'Basic High-G Seats', category: 'ship_parts' },
+  AGS: { name: 'Advanced High-G Seats', category: 'ship_parts' },
 
   // Auto-calculated components
-  SSC: { name: 'Ship Structure Component', category: 'construction_materials' },
+  SSC: { name: 'Ship Structure Component', category: 'ship_parts' },
   FFC: { name: 'FTL Field Controller', category: 'electronic_systems' },
-  SFE: { name: 'Small FTL Emitter', category: 'ship_parts' },
-  MFE: { name: 'Medium FTL Emitter', category: 'ship_parts' },
-  LFE: { name: 'Large FTL Emitter', category: 'ship_parts' },
-  BRS: { name: 'Short-distance Command Bridge', category: 'ship_kits' },
-  BR1: { name: 'Command Bridge MK1', category: 'ship_kits' },
-  BR2: { name: 'Command Bridge MK2', category: 'ship_kits' },
-  CQT: { name: 'Crew Quarters (Tiny)', category: 'ship_kits' },
-  CQS: { name: 'Crew Quarters (Small)', category: 'ship_kits' },
-  CQM: { name: 'Crew Quarters (Medium)', category: 'ship_kits' },
-  CQL: { name: 'Crew Quarters (Large)', category: 'ship_kits' },
+  SFE: { name: 'Small FTL Emitter', category: 'ship_engines' },
+  MFE: { name: 'Medium FTL Emitter', category: 'ship_engines' },
+  LFE: { name: 'Large FTL Emitter', category: 'ship_engines' },
+  BRS: { name: 'Short-distance Command Bridge', category: 'unit_prefabs' },
+  BR1: { name: 'Command Bridge MK1', category: 'unit_prefabs' },
+  BR2: { name: 'Command Bridge MK2', category: 'unit_prefabs' },
+  CQT: { name: 'Crew Quarters (Tiny)', category: 'unit_prefabs' },
+  CQS: { name: 'Crew Quarters (Small)', category: 'unit_prefabs' },
+  CQM: { name: 'Crew Quarters (Medium)', category: 'unit_prefabs' },
+  CQL: { name: 'Crew Quarters (Large)', category: 'unit_prefabs' },
 };
 
 // -- Lookup helpers --

@@ -52,6 +52,7 @@ export type MaterialCategory =
   | 'ship_shields'
   | 'fuels'
   | 'electronic_systems'
+  | 'unit_prefabs'
   | 'construction_materials'
   | 'metals'
   | 'alloys'

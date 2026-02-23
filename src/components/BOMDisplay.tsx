@@ -8,12 +8,11 @@ interface BOMDisplayProps {
 // Group order for display
 const CATEGORY_ORDER: MaterialCategory[] = [
   'ship_engines',
-  'fuels',
   'ship_kits',
   'ship_parts',
   'ship_shields',
   'electronic_systems',
-  'construction_materials',
+  'unit_prefabs',
   'metals',
   'alloys',
   'elements',
@@ -29,6 +28,7 @@ const CATEGORY_LABELS: Record<MaterialCategory, string> = {
   ship_parts: 'Ship Parts',
   ship_shields: 'Ship Shields',
   electronic_systems: 'Electronic Systems',
+  unit_prefabs: 'Unit Prefabs',
   construction_materials: 'Construction Materials',
   metals: 'Metals',
   alloys: 'Alloys',

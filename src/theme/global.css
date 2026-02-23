@@ -91,6 +91,7 @@ body {
 .cat-ship-shields { border-color: var(--cat-ship-shields); color: var(--cat-ship-shields); }
 .cat-fuels { border-color: var(--cat-fuels); color: var(--cat-fuels); }
 .cat-electronic-systems { border-color: var(--cat-electronic-systems); color: var(--cat-electronic-systems); }
+.cat-unit-prefabs { border-color: var(--cat-unit-prefabs); color: var(--cat-unit-prefabs); }
 .cat-construction-materials { border-color: var(--cat-construction-materials); color: var(--cat-construction-materials); }
 .cat-metals { border-color: var(--cat-metals); color: var(--cat-metals); }
 .cat-alloys { border-color: var(--cat-alloys); color: var(--cat-alloys); }

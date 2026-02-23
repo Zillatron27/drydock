@@ -14,15 +14,16 @@ interface ShipyardDetailProps {
 
 // Category display order and labels
 const CATEGORY_ORDER: MaterialCategory[] = [
-  'ship_engines', 'fuels', 'ship_kits', 'ship_parts', 'ship_shields',
-  'electronic_systems', 'construction_materials', 'metals', 'alloys',
+  'ship_engines', 'ship_kits', 'ship_parts', 'ship_shields',
+  'electronic_systems', 'unit_prefabs', 'metals', 'alloys',
   'elements', 'plastics', 'minerals', 'chemicals',
 ];
 
 const CATEGORY_LABELS: Record<MaterialCategory, string> = {
   ship_engines: 'Ship Engines', fuels: 'Fuels', ship_kits: 'Ship Kits',
   ship_parts: 'Ship Parts', ship_shields: 'Ship Shields',
-  electronic_systems: 'Electronic Systems', construction_materials: 'Construction Materials',
+  electronic_systems: 'Electronic Systems', unit_prefabs: 'Unit Prefabs',
+  construction_materials: 'Construction Materials',
   metals: 'Metals', alloys: 'Alloys', elements: 'Elements',
   plastics: 'Plastics', minerals: 'Minerals', chemicals: 'Chemicals',
 };
