@@ -34,6 +34,6 @@ All blueprint formulas were reverse-engineered from in-game testing across 13 sh
 
 ## Credits
 
-Part of the APEX_ ecosystem of Prosperous Universe community tools.
+Part of the 27bit Industries internal APEX_ tool. 
 
 Built with [Claude Code](https://claude.ai/code).
