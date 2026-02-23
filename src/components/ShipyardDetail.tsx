@@ -224,6 +224,16 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
   }, [cherryPick]);
 
+  // Cherry-pick per-exchange cost subtotals
+  const cherryExchangeCosts = useMemo(() => {
+    if (!cherryPick) return [];
+    const costs = new Map<string, number>();
+    for (const item of cherryPick.items) {
+      costs.set(item.bestExchange, (costs.get(item.bestExchange) ?? 0) + item.lineTotal);
+    }
+    return Array.from(costs.entries()).sort((a, b) => b[1] - a[1]);
+  }, [cherryPick]);
+
   // Per-exchange availability analysis
   const exchangeAnalyses = useMemo(() => {
     const map = new Map<string, ExchangeAnalysis>();
@@ -378,6 +388,11 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
             <div className={styles.cherryBody}>
               <div className={styles.cherryTotal}>
                 {formatCurrency(cherryPick.total)}
+              </div>
+              <div className={styles.cherryBreakdown}>
+                {cherryExchangeCosts.map(([ex, cost]) => (
+                  <span key={ex} className={styles.exchangeCostTag}>{ex}: {formatCurrency(cost)}</span>
+                ))}
               </div>
               <div className={styles.cherrySources}>
                 {cherrySourceCounts.map(([ex, count]) => (

@@ -207,6 +207,23 @@
   color: var(--text-secondary);
 }
 
+.cherryBreakdown {
+  display: flex;
+  gap: var(--gap-xs);
+  flex-wrap: wrap;
+}
+
+.exchangeCostTag {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--accent-dim);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
 .cherrySavings {
   font-size: 0.85rem;
   color: var(--positive);
