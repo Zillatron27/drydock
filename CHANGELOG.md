@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 — Preset Blueprints (2026-02-23)
+
+### Features
+- Seed 4 pre-loaded "evo" ship configurations on first visit (LCB, WCB, VCB, HCB haulers)
+- "Load example ships" button in empty state for users who cleared their blueprints
+- "Examples" button in header to append presets at any time
+- Name collision handling appends `(preset)` suffix when duplicates exist
+- First-visit seeding respects user intent — deleted blueprints won't reappear on reload
+- Responsive header layout with proper wrapping at mobile breakpoints
+
 ## 0.4.2 — FIO Category Alignment (2026-02-23)
 
 ### Bug Fixes
