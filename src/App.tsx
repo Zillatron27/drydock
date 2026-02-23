@@ -7,6 +7,7 @@ import { VERSION } from './version';
 import { BlueprintCard, NewBlueprintCard } from './components/BlueprintCard';
 import BlueprintEditor from './components/BlueprintEditor';
 import ShipyardDetail from './components/ShipyardDetail';
+import StatsPanel from './components/StatsPanel';
 import ImportModal from './components/ImportModal';
 import {
   exportBlueprint,
@@ -190,6 +191,7 @@ export default function App() {
               </h2>
               <button onClick={() => handleEdit(selectedBlueprint.id)}>Edit</button>
             </div>
+            <StatsPanel selections={selectedBlueprint.moduleSelections} />
             <ShipyardDetail
               blueprintName={selectedBlueprint.name}
               bom={selectedBlueprint.bom}
