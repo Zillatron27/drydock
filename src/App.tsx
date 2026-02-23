@@ -6,6 +6,14 @@ import { VERSION } from './version';
 import { BlueprintCard, NewBlueprintCard } from './components/BlueprintCard';
 import BlueprintEditor from './components/BlueprintEditor';
 import ShipyardDetail from './components/ShipyardDetail';
+import ImportModal from './components/ImportModal';
+import {
+  exportBlueprint,
+  exportCollection,
+  copyToClipboard,
+  downloadAsFile,
+  buildExportFilename,
+} from './services/blueprint_io';
 
 const STORAGE_KEY = 'drydock_blueprints';
 
@@ -29,6 +37,7 @@ export default function App() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pricesLoading, setPricesLoading] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const selectedBlueprint = blueprints.find(b => b.id === selectedId) ?? null;
   const editingBlueprint = blueprints.find(b => b.id === editingId);
@@ -82,6 +91,33 @@ export default function App() {
     setEditingId(null);
   }
 
+  async function handleExport(e: React.MouseEvent, blueprint: Blueprint): Promise<boolean> {
+    e.stopPropagation();
+    const json = JSON.stringify(exportBlueprint(blueprint), null, 2);
+    return copyToClipboard(json);
+  }
+
+  async function handleExportAll(): Promise<boolean> {
+    const json = JSON.stringify(exportCollection(blueprints), null, 2);
+    return copyToClipboard(json);
+  }
+
+  function handleDownloadAll(): void {
+    const json = JSON.stringify(exportCollection(blueprints), null, 2);
+    downloadAsFile(json, buildExportFilename('collection'));
+  }
+
+  function handleImportConfirm(entries: Array<{ name: string; modules: ModuleSelections }>) {
+    const newBlueprints = entries.map(entry => ({
+      id: crypto.randomUUID(),
+      name: entry.name,
+      moduleSelections: entry.modules,
+      bom: calculateBOM(entry.modules),
+    }));
+    persist([...blueprints, ...newBlueprints]);
+    setImportOpen(false);
+  }
+
   function handleCancel() {
     setEditorOpen(false);
     setEditingId(null);
@@ -89,7 +125,13 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header loading={pricesLoading} />
+      <Header
+        loading={pricesLoading}
+        blueprintCount={blueprints.length}
+        onImport={() => setImportOpen(true)}
+        onExportAll={handleExportAll}
+        onDownloadAll={handleDownloadAll}
+      />
 
       <main className="main">
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gap-md)', marginBottom: 'var(--gap-xl)' }}>
@@ -99,6 +141,7 @@ export default function App() {
               blueprint={bp}
               onClick={() => handleCardClick(bp.id)}
               onDelete={e => handleDelete(e, bp.id)}
+              onExport={e => handleExport(e, bp)}
             />
           ))}
           <NewBlueprintCard onClick={handleNewClick} />
@@ -146,6 +189,14 @@ export default function App() {
           existingBlueprint={editingBlueprint}
           onSave={handleSave}
           onCancel={handleCancel}
+        />
+      )}
+
+      {importOpen && (
+        <ImportModal
+          existingNames={blueprints.map(b => b.name)}
+          onImport={handleImportConfirm}
+          onCancel={() => setImportOpen(false)}
         />
       )}
     </div>

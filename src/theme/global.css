@@ -131,6 +131,22 @@ input[type="text"]:focus {
   border-color: var(--accent);
 }
 
+textarea {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  outline: none;
+  resize: vertical;
+}
+
+textarea:focus {
+  border-color: var(--accent);
+}
+
 button {
   font-family: var(--font-mono);
   font-size: 0.85rem;
@@ -167,6 +183,16 @@ button.danger {
 
 button.danger:hover {
   background: rgba(205, 92, 92, 0.15);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border);
 }
 
 /* App layout */

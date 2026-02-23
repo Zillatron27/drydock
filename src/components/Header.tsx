@@ -1,10 +1,31 @@
+import { useState } from 'react';
 import { VERSION } from '../version';
 
 interface HeaderProps {
   loading?: boolean;
+  blueprintCount: number;
+  onImport: () => void;
+  onExportAll: () => Promise<boolean>;
+  onDownloadAll: () => void;
 }
 
-export default function Header({ loading = false }: HeaderProps) {
+export default function Header({
+  loading = false,
+  blueprintCount,
+  onImport,
+  onExportAll,
+  onDownloadAll,
+}: HeaderProps) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleExportAll() {
+    const ok = await onExportAll();
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
   return (
     <header className="header">
       <div className="header-brand">
@@ -26,7 +47,23 @@ export default function Header({ loading = false }: HeaderProps) {
         <h1 className="logo">DRYDOCK</h1>
         <span className="tagline">Ship Blueprint Calculator</span>
       </div>
-      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>v{VERSION}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--gap-sm)' }}>
+        <button onClick={onImport}>Import</button>
+        <button
+          onClick={handleExportAll}
+          disabled={blueprintCount === 0}
+        >
+          {copied ? 'Copied!' : 'Export All'}
+        </button>
+        <button
+          onClick={onDownloadAll}
+          disabled={blueprintCount === 0}
+          title="Download all blueprints as .json file"
+        >
+          &#8615;
+        </button>
+        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>v{VERSION}</span>
+      </div>
     </header>
   );
 }

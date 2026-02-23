@@ -107,3 +107,25 @@ export interface EmitterCounts {
   medium: number;  // MFE
   large: number;   // LFE
 }
+
+/** Single blueprint export JSON */
+export interface BlueprintExport {
+  type: 'drydock-blueprint';
+  version: string;
+  exported_at: string;
+  name: string;
+  modules: ModuleSelections;
+}
+
+/** Multi-blueprint export JSON */
+export interface CollectionExport {
+  type: 'drydock-collection';
+  version: string;
+  exported_at: string;
+  blueprints: Array<{ name: string; modules: ModuleSelections }>;
+}
+
+/** Result of validating an import — entries contain validated data without IDs or BOMs */
+export type ImportResult =
+  | { success: true; entries: Array<{ name: string; modules: ModuleSelections }> }
+  | { success: false; error: string };
