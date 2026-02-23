@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 — Blueprint Import/Export (2026-02-23)
+
+### Features
+- Export individual blueprints to clipboard via per-card Export button
+- Export All blueprints to clipboard as a collection from header
+- Download All blueprints as a `.json` file
+- Import blueprints from clipboard paste or `.json` file upload
+- Live validation with clear error messages for invalid JSON, wrong versions, bad tickers
+- Name collision resolution: appends `(imported)` suffix automatically
+- Versioned JSON schema (`drydock-blueprint` / `drydock-collection`) for forward compatibility
+- 35 new tests covering roundtrips, rejection cases, edge cases, and collections
+
 ## 0.3.1 — Version Consolidation (2026-02-23)
 
 ### Features
