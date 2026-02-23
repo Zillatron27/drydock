@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { Blueprint, ModuleSelections } from './types';
 import { calculateBOM } from './formulas';
+import { PRESET_BLUEPRINTS } from './data/presets';
 import Header from './components/Header';
 import { VERSION } from './version';
 import { BlueprintCard, NewBlueprintCard } from './components/BlueprintCard';
@@ -16,12 +17,32 @@ import {
 } from './services/blueprint_io';
 
 const STORAGE_KEY = 'drydock_blueprints';
+const PRESETS_LOADED_KEY = 'drydock_presets_loaded';
+
+function generatePresetsAsBlueprints(): Blueprint[] {
+  return PRESET_BLUEPRINTS.map(preset => ({
+    id: crypto.randomUUID(),
+    name: preset.name,
+    moduleSelections: preset.modules,
+    bom: calculateBOM(preset.modules),
+  }));
+}
 
 function loadBlueprints(): Blueprint[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as Blueprint[];
+    if (raw) {
+      const parsed = JSON.parse(raw) as Blueprint[];
+      if (parsed.length > 0) return parsed;
+    }
+    // No blueprints — seed presets on first visit only
+    if (localStorage.getItem(PRESETS_LOADED_KEY) !== 'true') {
+      const seeded = generatePresetsAsBlueprints();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+      localStorage.setItem(PRESETS_LOADED_KEY, 'true');
+      return seeded;
+    }
+    return [];
   } catch {
     return [];
   }
@@ -123,6 +144,15 @@ export default function App() {
     setEditingId(null);
   }
 
+  function handleLoadPresets() {
+    const existingNames = new Set(blueprints.map(b => b.name));
+    const presets = generatePresetsAsBlueprints().map(bp => ({
+      ...bp,
+      name: existingNames.has(bp.name) ? `${bp.name} (preset)` : bp.name,
+    }));
+    persist([...blueprints, ...presets]);
+  }
+
   return (
     <div className="app">
       <Header
@@ -131,6 +161,7 @@ export default function App() {
         onImport={() => setImportOpen(true)}
         onExportAll={handleExportAll}
         onDownloadAll={handleDownloadAll}
+        onLoadPresets={handleLoadPresets}
       />
 
       <main className="main">
@@ -169,11 +200,13 @@ export default function App() {
 
         {blueprints.length === 0 && !selectedBlueprint && (
           <div style={{
-            textAlign: 'center',
-            color: 'var(--text-secondary)',
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 'var(--gap-md)',
             padding: 'var(--gap-xl) 0',
           }}>
-            Click + to create your first blueprint
+            <button className="primary" onClick={handleNewClick}>+ New Blueprint</button>
+            <button onClick={handleLoadPresets}>Load example ships</button>
           </div>
         )}
       </main>

@@ -279,6 +279,15 @@ button:disabled:hover {
   animation: hex-spin 0.7s linear infinite reverse;
 }
 
+/* Header actions — button group */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 /* Footer */
 .footer {
   display: flex;
@@ -303,11 +312,17 @@ button:disabled:hover {
 
   .header {
     padding: var(--gap-sm) var(--gap-md);
+    flex-wrap: wrap;
   }
 
   .header-brand {
     flex-direction: column;
     gap: 0;
+  }
+
+  .header-actions button {
+    font-size: 0.78rem;
+    padding: 4px 10px;
   }
 
   .tagline {
@@ -326,5 +341,13 @@ button:disabled:hover {
 
   .main {
     padding: var(--gap-sm);
+  }
+
+  .header-actions {
+    gap: var(--gap-xs);
+  }
+
+  .header-actions button {
+    padding: 3px 8px;
   }
 }

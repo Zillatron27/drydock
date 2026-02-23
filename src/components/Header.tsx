@@ -7,6 +7,7 @@ interface HeaderProps {
   onImport: () => void;
   onExportAll: () => Promise<boolean>;
   onDownloadAll: () => void;
+  onLoadPresets: () => void;
 }
 
 export default function Header({
@@ -15,6 +16,7 @@ export default function Header({
   onImport,
   onExportAll,
   onDownloadAll,
+  onLoadPresets,
 }: HeaderProps) {
   const [copied, setCopied] = useState(false);
 
@@ -47,7 +49,13 @@ export default function Header({
         <h1 className="logo">DRYDOCK</h1>
         <span className="tagline">Ship Blueprint Calculator</span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--gap-sm)' }}>
+      <div className="header-actions">
+        <button
+          onClick={onLoadPresets}
+          style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}
+        >
+          Examples
+        </button>
         <button onClick={onImport}>Import</button>
         <button
           onClick={handleExportAll}
