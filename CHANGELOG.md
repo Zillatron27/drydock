@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1 — Live Editor Stats (2026-02-23)
+
+### Features
+- Integrate StatsPanel into BlueprintEditor for live stat feedback while changing module selections
+- Replace standalone volume summary with full stats dashboard (mass, build time, max G, cargo, drive, shielding)
+
 ## 0.6.0 — Ship Stats Dashboard (2026-02-23)
 
 ### Features
