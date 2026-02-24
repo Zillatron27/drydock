@@ -8,11 +8,13 @@ Design a ship. See what it costs. Find the cheapest exchange to buy parts. Share
 
 ## What it does
 
-1. Select ship modules from dropdowns (same layout as in-game BLU command)
-2. Auto-calculates derived components (structure, hull plates, shields, emitters, bridge, crew quarters)
-3. Prices the full Bill of Materials across all 6 commodity exchanges
-4. Shows cherry-pick sourcing (buy each part where it's cheapest)
-5. Share blueprints as compact URLs — paste into Discord, forums, or chat
+- Select ship modules from drop down lists (similar layout as BLU) or load the example ships and modify them
+- Auto-calculates derived components (structure, hull plates, shields, emitters, bridge, crew quarters)
+- Prices the full Bill of Materials across all 6 commodity exchanges and indicates if it's available and where
+- Shows cherry-pick sourcing (buy each part where it's cheapest/available)
+- Share blueprints as compact URLs — paste into Discord, forums, whatever. 
+- Import/Export (JSON) to backup transfer between browsers.
+- No account needed! :ohwow:
 
 ## Sharing
 
