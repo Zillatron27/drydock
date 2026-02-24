@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.0 — Permalink Sharing (2026-02-24)
+
+### Features
+- Share blueprints as compact URLs — `drydock.cc/?bp=1-012241&n=Ship+Name`
+- 12 module slots encoded as single digits, version-prefixed, with trailing zero trimming
+- Share button on blueprint cards copies permalink to clipboard
+- Share button in blueprint editor lets users share before saving
+- Permalink import on page load — opening a link auto-creates the blueprint
+- URL cleaned via `history.replaceState` after import (no re-import on refresh)
+- Name collision handling appends `(shared)` suffix
+- 43 new tests: roundtrips, preset blueprints, trailing zero trimming, validation rejection, name handling, SLOT_OPTIONS ordering guard
+
 ## 0.6.1 — Live Editor Stats (2026-02-23)
 
 ### Features

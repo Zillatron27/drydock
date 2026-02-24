@@ -2,7 +2,7 @@
 
 Ship blueprint cost calculator for [Prosperous Universe](https://prosperousuniverse.com).
 
-Design a ship. See what it costs. Find the cheapest exchange to buy parts.
+Design a ship. See what it costs. Find the cheapest exchange to buy parts. Share builds with a link.
 
 **→ [drydock.cc](https://drydock.cc)**
 
@@ -12,6 +12,17 @@ Design a ship. See what it costs. Find the cheapest exchange to buy parts.
 2. Auto-calculates derived components (structure, hull plates, shields, emitters, bridge, crew quarters)
 3. Prices the full Bill of Materials across all 6 commodity exchanges
 4. Shows cherry-pick sourcing (buy each part where it's cheapest)
+5. Share blueprints as compact URLs — paste into Discord, forums, or chat
+
+## Sharing
+
+Every blueprint can be shared as a URL:
+
+```
+https://drydock.cc/?bp=1-012241&n=FTL+Hauler
+```
+
+Click **Share** on any blueprint card or in the editor to copy the link. Opening a shared link auto-imports the blueprint.
 
 ## Tech
 
@@ -26,6 +37,7 @@ Design a ship. See what it costs. Find the cheapest exchange to buy parts.
 ```bash
 npm install
 npm run dev
+npm test        # 129 tests (formulas, import/export, permalinks)
 ```
 
 ## Formulas
@@ -34,6 +46,6 @@ All blueprint formulas were reverse-engineered from in-game testing across 13 sh
 
 ## Credits
 
-Part of the 27bit Industries internal APEX_ tool. 
+Part of the 27bit Industries internal APEX_ tool.
 
 Built with [Claude Code](https://claude.ai/code).
