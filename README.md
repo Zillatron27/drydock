@@ -4,7 +4,7 @@ Ship blueprint cost calculator for [Prosperous Universe](https://prosperousunive
 
 Design a ship. See what it costs. Find the cheapest exchange to buy parts. Share builds with a link.
 
-**→ [drydock.cc](https://drydock.cc)**
+**LIVE HERE → [drydock.cc](https://drydock.cc)**
 
 ## What it does
 
