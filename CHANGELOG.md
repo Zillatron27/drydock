@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 — Card Layout Polish (2026-02-24)
+
+### Bug Fixes
+- Fix blueprint card header — stack name above Share/Export buttons so long names don't clash with action buttons
+- Cap blueprint card grid at 4 columns using CSS grid with `max-width` constraint
+- Name now truncates with ellipsis instead of pushing buttons off-screen
+
 ## 1.0.0 — Permalink Sharing (2026-02-24)
 
 ### Features
