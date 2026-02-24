@@ -210,7 +210,7 @@ export default function App() {
       />
 
       <main className="main">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', maxWidth: '1080px', gap: 'var(--gap-md)', marginBottom: 'var(--gap-xl)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', maxWidth: '1080px', gap: 'var(--gap-md)', marginBottom: 'var(--gap-xl)' }}>
           {blueprints.map(bp => (
             <BlueprintCard
               key={bp.id}
