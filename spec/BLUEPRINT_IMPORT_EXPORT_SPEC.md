@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-23
 **Target version:** 0.4.0
-**Status:** Ready for implementation
+**Status:** Implemented
 
 ## Overview
 
@@ -199,9 +199,9 @@ No new component needed. Use a brief inline confirmation on the card/button that
 - **BOM in file** — strip UTF-8 BOM if present before JSON.parse.
 - **Very large paste** — no hard limit, but if JSON.parse throws, catch and show "Invalid JSON" error.
 
-## NOT in scope
+## Related
 
-- **URL-encoded sharing** (`drydock.cc/?bp=...`) — good idea for later but adds routing complexity. Defer to a future version.
+- **Permalink sharing** (`drydock.cc/?bp=...`) — URL-encoded blueprint sharing is specified separately in `PERMALINK_SPEC.md`.
 - **Import from game clipboard** — the in-game BLU command doesn't export to a parseable format. Not feasible.
 - **Cloud sync** — DryDock is client-side only. No accounts, no server.
 
