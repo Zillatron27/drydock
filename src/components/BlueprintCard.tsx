@@ -38,7 +38,16 @@ export function BlueprintCard({ blueprint, onClick, onDelete, onExport, onShare 
   return (
     <div className={`card ${styles.blueprintCard}`} onClick={onClick}>
       <div className={styles.cardHeader}>
-        <span className={styles.cardName}>{blueprint.name}</span>
+        <div className={styles.cardTitleRow}>
+          <span className={styles.cardName}>{blueprint.name}</span>
+          <button
+            className={`danger ${styles.deleteBtn}`}
+            onClick={onDelete}
+            title="Delete blueprint"
+          >
+            &times;
+          </button>
+        </div>
         <div className={styles.cardActions}>
           <button
             className={styles.exportBtn}
@@ -55,13 +64,6 @@ export function BlueprintCard({ blueprint, onClick, onDelete, onExport, onShare 
             data-copied={copied || undefined}
           >
             {copied ? 'Copied!' : 'Export'}
-          </button>
-          <button
-            className={`danger ${styles.deleteBtn}`}
-            onClick={onDelete}
-            title="Delete blueprint"
-          >
-            &times;
           </button>
         </div>
       </div>

@@ -8,14 +8,25 @@
 
 .cardHeader {
   display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+}
+
+.cardTitleRow {
+  display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--gap-xs);
 }
 
 .cardName {
   font-family: var(--font-display);
   font-size: 0.9rem;
   color: var(--accent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .cardActions {
