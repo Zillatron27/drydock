@@ -42,7 +42,7 @@ npm test        # 129 tests (formulas, import/export, permalinks)
 
 ## Formulas
 
-All blueprint formulas were reverse-engineered from in-game testing across 13 ship configurations. See `spec/SHIP_BLUEPRINT_BUILDER_SPEC.md` for the full derivation and verification data.
+All blueprint formulas were reverse-engineered from in-game testing across 13 ship configurations. See [`spec/SHIP_BLUEPRINT_BUILDER_SPEC.md`](https://github.com/Zillatron27/drydock/blob/main/spec/SHIP_BLUEPRINT_BUILDER_SPEC.md) for the full derivation and verification data.
 
 ## Credits
 
