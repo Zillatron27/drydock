@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2 — Card Grid Fix (2026-02-24)
+
+### Bug Fixes
+- Cap blueprint card grid at 4 columns (was 5) by increasing minimum card width to 240px
+
 ## 1.0.1 — Card Layout Polish (2026-02-24)
 
 ### Bug Fixes
