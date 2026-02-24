@@ -17,6 +17,8 @@ import {
   optionalSlots,
 } from '../data/modules';
 import StatsPanel from './StatsPanel';
+import { encodeBlueprint } from '../services/permalink';
+import { copyToClipboard } from '../services/blueprint_io';
 import styles from './BlueprintEditor.module.css';
 
 // Map slot name → ModuleSelections key
@@ -61,6 +63,7 @@ export default function BlueprintEditor({ existingBlueprint, onSave, onCancel }:
   const [selections, setSelections] = useState<ModuleSelections>(
     existingBlueprint?.moduleSelections ?? DEFAULT_SELECTIONS
   );
+  const [shared, setShared] = useState(false);
 
   const volume = useMemo(() => calculateVolume(selections), [selections]);
   const ssc = useMemo(() => calculateSSC(volume), [volume]);
@@ -83,6 +86,15 @@ export default function BlueprintEditor({ existingBlueprint, onSave, onCancel }:
     const trimmed = name.trim();
     if (!trimmed) return;
     onSave(trimmed, selections);
+  }
+
+  async function handleShare() {
+    const url = encodeBlueprint(selections, name.trim() || undefined);
+    const ok = await copyToClipboard(url);
+    if (ok) {
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    }
   }
 
   function renderSlot(slot: ModuleSlot) {
@@ -182,6 +194,9 @@ export default function BlueprintEditor({ existingBlueprint, onSave, onCancel }:
         </div>
 
         <div className={styles.editorFooter}>
+          <button onClick={handleShare}>
+            {shared ? 'Link copied!' : 'Share'}
+          </button>
           <button onClick={onCancel}>Cancel</button>
           <button className="primary" onClick={handleSave} disabled={!name.trim()}>
             Save

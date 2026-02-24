@@ -8,12 +8,14 @@ interface BlueprintCardProps {
   onClick: () => void;
   onDelete: (e: React.MouseEvent) => void;
   onExport: (e: React.MouseEvent) => Promise<boolean>;
+  onShare: (e: React.MouseEvent) => Promise<boolean>;
 }
 
-export function BlueprintCard({ blueprint, onClick, onDelete, onExport }: BlueprintCardProps) {
+export function BlueprintCard({ blueprint, onClick, onDelete, onExport, onShare }: BlueprintCardProps) {
   const volume = calculateVolume(blueprint.moduleSelections);
   const materialCount = blueprint.bom.length;
   const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
 
   async function handleExport(e: React.MouseEvent) {
     e.stopPropagation();
@@ -24,11 +26,28 @@ export function BlueprintCard({ blueprint, onClick, onDelete, onExport }: Bluepr
     }
   }
 
+  async function handleShare(e: React.MouseEvent) {
+    e.stopPropagation();
+    const ok = await onShare(e);
+    if (ok) {
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    }
+  }
+
   return (
     <div className={`card ${styles.blueprintCard}`} onClick={onClick}>
       <div className={styles.cardHeader}>
         <span className={styles.cardName}>{blueprint.name}</span>
         <div className={styles.cardActions}>
+          <button
+            className={styles.exportBtn}
+            onClick={handleShare}
+            title="Copy share link to clipboard"
+            data-copied={shared || undefined}
+          >
+            {shared ? 'Copied!' : 'Share'}
+          </button>
           <button
             className={styles.exportBtn}
             onClick={handleExport}

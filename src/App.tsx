@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Blueprint, ModuleSelections } from './types';
 import { calculateBOM } from './formulas';
 import { PRESET_BLUEPRINTS } from './data/presets';
@@ -16,6 +16,7 @@ import {
   downloadAsFile,
   buildExportFilename,
 } from './services/blueprint_io';
+import { decodeBlueprint, encodeBlueprint } from './services/permalink';
 
 const STORAGE_KEY = 'drydock_blueprints';
 const PRESETS_LOADED_KEY = 'drydock_presets_loaded';
@@ -64,6 +65,43 @@ export default function App() {
   const selectedBlueprint = blueprints.find(b => b.id === selectedId) ?? null;
   const editingBlueprint = blueprints.find(b => b.id === editingId);
 
+  // Import blueprint from permalink on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('bp')) return;
+
+    const result = decodeBlueprint(params);
+    if ('error' in result) {
+      console.warn('Permalink decode failed:', result.error);
+      history.replaceState({}, '', '/');
+      return;
+    }
+
+    // Name collision: append (shared) suffix
+    const existingNames = new Set(blueprints.map(b => b.name));
+    let name = result.name;
+    if (existingNames.has(name)) {
+      name = `${name} (shared)`;
+      let counter = 2;
+      while (existingNames.has(name)) {
+        name = `${result.name} (shared ${counter})`;
+        counter++;
+      }
+    }
+
+    const newBlueprint: Blueprint = {
+      id: crypto.randomUUID(),
+      name,
+      moduleSelections: result.selections,
+      bom: calculateBOM(result.selections),
+    };
+
+    const next = [...blueprints, newBlueprint];
+    persist(next);
+    setSelectedId(newBlueprint.id);
+    history.replaceState({}, '', '/');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const persist = useCallback((next: Blueprint[]) => {
     setBlueprints(next);
     saveBlueprints(next);
@@ -111,6 +149,12 @@ export default function App() {
 
     setEditorOpen(false);
     setEditingId(null);
+  }
+
+  async function handleShare(e: React.MouseEvent, blueprint: Blueprint): Promise<boolean> {
+    e.stopPropagation();
+    const url = encodeBlueprint(blueprint.moduleSelections, blueprint.name);
+    return copyToClipboard(url);
   }
 
   async function handleExport(e: React.MouseEvent, blueprint: Blueprint): Promise<boolean> {
@@ -173,6 +217,7 @@ export default function App() {
               blueprint={bp}
               onClick={() => handleCardClick(bp.id)}
               onDelete={e => handleDelete(e, bp.id)}
+              onShare={e => handleShare(e, bp)}
               onExport={e => handleExport(e, bp)}
             />
           ))}
