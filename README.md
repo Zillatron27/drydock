@@ -30,8 +30,8 @@ Click **Share** on any blueprint card or in the editor to copy the link. Opening
 - Hosted on Cloudflare Pages
 - Uses [FIO API](https://doc.fnar.net) for material data and CX pricing
 - No backend, no accounts — runs entirely in your browser
-- Uses the [APEX_](https://github.com/Zillatron27/APEX_) design system
-
+- Design derived from 27bit Industries internal **APEX_** tool.
+  
 ## Development
 
 ```bash
