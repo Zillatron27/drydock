@@ -4,13 +4,9 @@
 
 A custom ship blueprint cost calculator. Users design a ship by selecting modules from dropdowns (mirroring the in-game BLU command), the system calculates the full BOM, then prices it across all 6 exchanges with cherry-pick sourcing and ACT package generation.
 
-This is a candidate for extraction as a standalone public tool. The Shipyard service already does all the pricing/sourcing work — this feature adds the blueprint *input* layer.
-
 ## Why Build This?
 
-The existing Shipyard page requires hardcoded blueprints. Users can't price arbitrary ship designs without manually entering a BOM. The in-game blueprint editor shows you what materials you need, but doesn't tell you where to buy them cheaply or generate action packages for purchasing.
-
-No existing community tool does this. PrunPlanner has base planning but no ship BOM cost analysis. The repair calc spreadsheet handles damage costs but not construction sourcing.
+The existing community tools don't do ship BOM cost analysis with exchange sourcing. The in-game blueprint editor shows you what materials you need, but doesn't tell you where to buy them cheaply or generate action packages for purchasing.
 
 ## User Flow
 
@@ -18,10 +14,11 @@ No existing community tool does this. PrunPlanner has base planning but no ship 
 2. User clicks "+" → **Blueprint Editor modal** opens
 3. User selects modules from dropdowns (same layout categories as in-game BLU command)
 4. System calculates derived components (structure, hull plates, shields, emitters, bridge, crew) in real-time as selections change
-5. **Preview section** at bottom shows the full BOM with material counts
-6. User names the blueprint and clicks **Save**
-7. Blueprint appears as a new card alongside hardcoded blueprints
-8. Clicking it triggers the existing Shipyard analysis — exchange cards, cherry-pick, ACT packages
+5. **Stats panel** shows computed ship performance (volume, mass, build time, cargo, drive stats, shielding)
+6. **BOM preview** at bottom shows the full material list with counts
+7. User names the blueprint and clicks **Save**
+8. Blueprint appears as a new card alongside preset and imported blueprints
+9. Clicking it triggers exchange analysis — exchange cards, cherry-pick, ACT packages
 
 ## Blueprint Editor Layout
 
@@ -48,8 +45,6 @@ All tickers verified against FIO `/material/allmaterials` endpoint. Each row is 
 |------|---------|--------|-----------|
 | Cargo Bay | Tiny, Very Small, Small, Medium, Large, High-Load, High-Volume, Huge | TCB, VSC, SCB, MCB, LCB, WCB, VCB, HCB | Yes |
 
-Note: FIO has 8 cargo bay tickers. PCT lists 7 sizes. HCB (hugeCargoBay) may be a distinct size not in the original PCT table — **verify volume in-game**.
-
 **Hull & Shielding** (type selection — count auto-calculated for plates/shields)
 
 | Slot | Options | Ticker | Required? |
@@ -69,8 +64,6 @@ Note: FIO has 8 cargo bay tickers. PCT lists 7 sizes. HCB (hugeCargoBay) may be 
 
 These modules add mass but NOT volume. They appear as 1× in the BOM when selected. Confirmed: adding AGS to a 5837m³ ship changes mass (1862t→1892t) but volume, SSC, plates, and emitters all remain unchanged.
 
-**NV1/NV2** (navigation) and **THP/ATP** (thermal protection) are crafting intermediates consumed in bridge and heat shield recipes — not blueprint slots. **FIR/RAG** are consumed in reactor recipes. **HAM** (Habitation Module) and **DOU** (Drone Operations Unit) appear in the blueprint as auto-calculated fields ("not required"), not user-selectable slots — likely colony ship features.
-
 ### Section 2: Auto-calculated Components (read-only display)
 
 These are computed from the module selections and displayed as read-only rows:
@@ -81,14 +74,11 @@ These are computed from the module selections and displayed as read-only rows:
 | Hull Plates | `ceil(volume^(2/3) / 2.07)` | Same as hull plate selection | Always |
 | Shield Components | `ceil(volume^(2/3) / 2.07)` per type | Same as each shield selection | Per equipped shield |
 | FTL Field Controller | 1 | FFC | If FTL reactor equipped |
-| Small FTL Emitters | Emitter algorithm | SFE | If FTL reactor equipped |
-| Medium FTL Emitters | Emitter algorithm | MFE | If FTL reactor equipped |
-| Large FTL Emitters | Emitter algorithm | LFE | If FTL reactor equipped |
+| Small FTL Emitters | Diminishing-multiplier algorithm | SFE | If FTL reactor equipped |
+| Medium FTL Emitters | Diminishing-multiplier algorithm | MFE | If FTL reactor equipped |
+| Large FTL Emitters | Diminishing-multiplier algorithm | LFE | If FTL reactor equipped |
 | Command Bridge | 1 | BRS/BR1/BR2 (by FTL reactor type) | Always |
 | Crew Quarters | 1 | CQT/CQS/CQM/CQL (by volume thresholds) | Always |
-| Habitation Modules | ? | HAM | Colony ships only (not required for freighters) |
-
-**Bridge and crew quarters are auto-calculated** — see [Command Bridge & Crew Quarters](#command-bridge--crew-quarters) for formulas.
 
 ### Section 3: BOM Preview
 
@@ -96,63 +86,67 @@ Real-time material list with quantities, updated as selections change. Same badg
 
 ## Core Calculations
 
-### Volume
+### Volume — Delta Model
 
-Total ship volume = sum of all component volumes.
+Volume cannot be calculated from absolute per-module values. Each module's contribution depends on the full ship configuration due to auto-computed component cascades (SSC, plates, shields, emitters all derive from total volume). Instead, DryDock uses a **delta model**: a validated reference ship plus per-slot deltas.
 
-**Cargo Bay volumes:**
+**Reference ship:** ENG + SSL + RCT + SFL + SCB + BHP = **963 m³** (827.8 t)
 
-| Option | Ticker | Volume (m³) |
-|--------|--------|-------------|
-| Tiny | TCB | 105 |
-| Very Small | VSC | 263 |
-| Small | SCB | 525 |
-| Medium | MCB | 1050 |
-| Large | LCB | 2100 |
-| High-Load | WCB | 1050 |
-| High-Volume | VCB | 3150 |
-| Huge | HCB | 5250 |
+For each slot, the delta is the volume difference when swapping from the reference module to the selected module. The total volume is the reference volume plus all applicable deltas.
 
-Note: Game displays total volume as 1 less than calculated (e.g. shows 5837 when components sum to 5838). All formulas use the calculated sum, not the displayed value. Verified: floor(5838/21)=278 matches screenshot SSC count.
+**STL Engine deltas:**
 
-**FTL Fuel Tank volumes:**
+| Option | Ticker | Volume Δ |
+|--------|--------|----------|
+| Standard | ENG | 0 |
+| Fuel-saving | FSE | −1 |
+| Glass | GEN | −1 |
+| Advanced | AEN | +3 |
+| Hyperthrust | HTE | +7 |
 
-| Option | Ticker | Volume (m³) |
-|--------|--------|-------------|
-| None | — | 0 |
-| Small | SFL | 3 |
-| Medium | MFL | 9 |
-| Large | LFL | 21 |
+**STL Fuel Tank deltas:**
 
-**STL Fuel Tank volumes:**
+| Option | Ticker | Volume Δ |
+|--------|--------|----------|
+| Small | SSL | 0 |
+| Medium | MSL | +126 |
+| Large | LSL | +410 |
 
-| Option | Ticker | Volume (m³) |
-|--------|--------|-------------|
-| Small | SSL | 70 |
-| Medium | MSL | 196 |
-| Large | LSL | 480 |
+**FTL Reactor deltas:**
 
-**FTL Reactor volumes:**
+| Option | Ticker | Volume Δ |
+|--------|--------|----------|
+| Standard | RCT | 0 |
+| Quick-charge | QCR | +7 |
+| High-power | HPR | +117 |
+| Hyper-power | HYR | +127 |
 
-| Option | Ticker | Volume (m³) |
-|--------|--------|-------------|
-| None | — | 0 |
-| Standard | RCT | 126 |
-| Quick-charge | QCR | 133 |
-| High-power | HPR | 243 |
-| Hyper-power | HYR | 253 |
+**FTL Fuel Tank deltas:**
 
-**STL Engine volumes:**
+| Option | Ticker | Volume Δ |
+|--------|--------|----------|
+| Small | SFL | 0 |
+| Medium | MFL | +6 |
+| Large | LFL | +18 |
 
-| Option | Ticker | Volume (m³) |
-|--------|--------|-------------|
-| Standard | ENG | 239 |
-| Fuel-saving | FSE | 238 |
-| Glass | GEN | 238 |
-| Advanced | AEN | 452 |
-| Hyperthrust | HTE | 456 |
+**Cargo Bay deltas:**
 
-Source: PrUn Community Derived Information (pct.fnar.net/ship-blueprints)
+| Option | Ticker | Volume Δ |
+|--------|--------|----------|
+| Tiny | TCB | −420 |
+| Very Small | VSC | −262 |
+| Small | SCB | 0 |
+| Medium | MCB | +525 |
+| Large | LCB | +1575 |
+| High-Load | WCB | +525 |
+| High-Volume | VCB | +2625 |
+| Huge | HCB | +4725 |
+
+**Hull, shields, drones, seats:** All have **0 volume delta** (they affect mass only, not volume).
+
+**STL-only ships:** When both FTL reactor and FTL fuel tank are null, apply an additional **−129** volume delta (the reference FTL contribution is subtracted).
+
+**Validation:** 23 in-game blueprints with zero error. The delta model supersedes the absolute per-module volumes from PCT, which produced inconsistencies due to unaccounted auto-computed cascades.
 
 ### Structure (SSC)
 
@@ -160,7 +154,7 @@ Source: PrUn Community Derived Information (pct.fnar.net/ship-blueprints)
 SSC_count = ceil(total_volume / 21)
 ```
 
-**CORRECTED:** Original formula was `floor()`, which happened to match the first 5 ships because their volumes fell near exact multiples of 21. Systematic testing with 13 ships proved `ceil()` — the HPR test (vol=1079, 1079/21=51.38) produces ceil=52 matching the game, while round=51 and floor=51 are wrong. Verified 13/13.
+Validated 52/52 regular ships.
 
 ### Hull Plates
 
@@ -168,9 +162,7 @@ SSC_count = ceil(total_volume / 21)
 plate_count = ceil(total_volume ^ (2/3) / 2.07)
 ```
 
-**CORRECTED:** Original formula used `round()` with divisor 2.06. Systematic testing with 13 ships (both BHP and LHP) revealed `ceil()` with divisor ~2.07 is exact. The `round(V^(2/3)/2.06)` formula failed on 2 of 13 ships (RCT test vol=962: predicted 47, actual 48; 3k1k vol=1638: predicted 67, actual 68). `ceil(V^(2/3)/2.07)` matches all 13 ships perfectly. Range 2.066–2.073 all work; 2.07 chosen as cleanest value.
-
-The plate count is the same regardless of plate type (BHP, LHP, RHP, HHP, AHP). Confirmed across both BHP and LHP ships. The type only determines which material ticker goes into the BOM.
+The plate count is the same regardless of plate type (BHP, LHP, RHP, HHP, AHP). The type only determines which material ticker goes into the BOM. Validated 52/52.
 
 ### Shield Components
 
@@ -180,92 +172,97 @@ Each equipped shield type adds materials equal to the plate count:
 shield_count = plate_count  (same formula, same count)
 ```
 
-Only shields the user selected are included. A ship with no shields has no shield materials. A ship with all 3 shield types gets 3 × plate_count additional materials (one line per shield type).
+Only shields the user selected are included.
 
-Verified via repair calculator data (all 3 test ships show shield count = plate count).
+### FTL Emitters — Diminishing-Multiplier Algorithm
 
-### FTL Emitters
+This algorithm determines how many large, medium, and small FTL field emitters a ship needs. Validated 47/47 FTL ships.
 
-Algorithm provided by game developer (molp) on the official PrUn forum, with corrected span values from community member SLKLS (verified Feb 2026):
+**Constants:**
+- LFE_SPAN = 1000
+- MFE_SPAN = 500
+- SFE_SPAN = 250
+- BASE_D = 10
+- MULTIPLIER = 20
 
-```python
-def calc_emitters(volume):
-    large = 0    # LFE
-    medium = 0   # MFE
-    small = 0    # SFE
-    covered = 0.0
+**Algorithm:**
 
-    while covered + 1050 <= volume:
-        large += 1
-        covered += 1050
+```
+LFE = floor(volume / LFE_SPAN)
+remainder = volume % LFE_SPAN
 
-    while covered + 260 <= volume:
-        medium += 1
-        covered += 260
+if remainder == 0:
+    return { small: 0, medium: 0, large: LFE }
 
-    while covered < volume:
-        small += 1
-        covered += 100
+working = (remainder × MULTIPLIER) / (BASE_D + LFE)
+MFE = floor(working / MFE_SPAN)
+leftover = working - MFE × MFE_SPAN
+SFE = ceil(leftover / SFE_SPAN) if leftover > 0 else 0
 
-    return small, medium, large
+return { small: SFE, medium: MFE, large: LFE }
 ```
 
-Only calculated if FTL reactor is selected. Verified against 6 ships (4 Dan's + 2 forum examples). All match exactly.
+**How it works:** Large emitters cover 1000 m³ each. The remaining volume is scaled by a diminishing multiplier — `20 / (10 + large_count)` — that makes the residual coverage *cheaper* as the ship gets larger. This scaled value is then divided among medium (500 units) and small (250 units) emitters.
+
+**Worked example (volume = 5688):**
+1. LFE = floor(5688 / 1000) = 5
+2. remainder = 5688 % 1000 = 688
+3. working = 688 × 20 / (10 + 5) = 917.33
+4. MFE = floor(917.33 / 500) = 1
+5. leftover = 917.33 − 500 = 417.33
+6. SFE = ceil(417.33 / 250) = 2
+7. Result: 2 SFE, 1 MFE, 5 LFE ✓
+
+Only calculated if FTL reactor is selected.
+
+### Mass — BOM Weight Summation
+
+Ship mass is the sum of `bomWeight × quantity` for every component in the bill of materials. This includes selectable modules (1 unit each), hull plates and shields (plate_count units each), auto-computed components (SSC, bridge, crew quarters, FFC, emitters), and optional equipment (1 unit each).
+
+Per-module BOM weights are captured from the game's WebSocket data (`moduleStats.ts`). This produces **exact** mass values — validated with zero error across 24 in-game blueprints.
+
+Mass is NOT a "known unknown" — the previous uncertainty was because absolute per-module volumes were used, which caused cascading errors in auto-computed component counts. The delta model eliminates this.
 
 ### Build Time
 
 ```
-build_time_hours = operating_empty_mass / 50
+build_time_hours = mass / 50
 ```
 
-Source: PCT community data. Operating empty mass calculation is the one remaining area of complexity — mass depends on component selections in non-linear ways (see PCT mass tables). For v1, display build time as "~Xh" estimated, or omit until mass formula is fully verified.
+Validated against in-game data.
 
-### Command Bridge & Crew Quarters
+### Command Bridge
 
-**These are auto-assigned by the game — NOT user-selectable.** Formulas verified against 13 ships.
+Auto-assigned by the game based on FTL reactor type. Not user-selectable.
 
-#### Command Bridge (depends on FTL reactor type)
-
-```python
-def get_bridge(ftl_reactor):
-    if ftl_reactor is None:
-        return "BRS"  # Short-distance Command Bridge
-    elif ftl_reactor in ("RCT", "QCR"):
-        return "BR1"  # Command Bridge MK1
-    elif ftl_reactor in ("HPR", "HYR"):
-        return "BR2"  # Command Bridge MK2
+```
+No FTL reactor → BRS (Short-distance Command Bridge)
+RCT or QCR    → BR1 (Command Bridge MK1)
+HPR or HYR    → BR2 (Command Bridge MK2)
 ```
 
-| FTL Reactor | Bridge | Verified |
-|-------------|--------|----------|
-| None | BRS (Short-distance) | 7 ships |
-| RCT (Standard) | BR1 (MK1) | 1 ship |
-| QCR (Quick-charge) | BR1 (MK1) | 3 ships |
-| HPR (High-power) | BR2 (MK2) | 1 ship |
-| HYR (Hyper-power) | BR2 (MK2) | 1 ship |
+Validated 52/52 ships.
 
-#### Crew Quarters (depends on volume)
+### Crew Quarters
 
-```python
-def get_crew_quarters(volume):
-    if volume < 1000:
-        return "CQT"  # Crew Quarters (Tiny)
-    elif volume < 2000:
-        return "CQS"  # Crew Quarters (Small)
-    elif volume < 3000:
-        return "CQM"  # Crew Quarters (Medium)
-    else:
-        return "CQL"  # Crew Quarters (Large)
+Auto-assigned by the game based on total volume. Not user-selectable.
+
+| Volume ≤ | Crew Quarters | Ticker |
+|----------|---------------|--------|
+| 834 | Tiny | CQT |
+| 2533 | Small | CQS |
+| 3587 | Medium | CQM |
+| > 3587 | Large | CQL |
+
+Validated 52/52 ships. Note: these thresholds are NOT round numbers. The previous approximation (1000/2000/3000) was wrong for ships near the boundaries.
+
+### FTL Field Controller
+
+```
+FFC_count = 1 if FTL reactor equipped, else 0
 ```
 
-| Volume Range | Crew Quarters | Verified |
-|-------------|---------------|----------|
-| < 1000 | CQT (Tiny) | 2 ships |
-| 1000–1999 | CQS (Small) | 3 ships |
-| 2000–2999 | CQM (Medium) | 3 ships |
-| ≥ 3000 | CQL (Large) | 3 ships |
-
-Both formulas verified 13/13 across all test ships.
+Validated 52/52 ships.
 
 ## Data Architecture
 
@@ -273,47 +270,42 @@ Both formulas verified 13/13 across all test ships.
 
 TypeScript object mapping slots → options → properties. Lives in `src/data/modules.ts`.
 
+### Module Performance Stats
+
+Wire-captured data from PrUn's WebSocket traffic. Lives in `src/data/moduleStats.ts`. Contains per-module BOM weight, BOM volume, and modifier values (thrust, cargo capacity, fuel consumption, shielding percentages, etc.).
+
 ### Custom Blueprint Storage
 
-For the standalone public tool, blueprints are stored in the browser's localStorage as JSON. No server-side storage.
+Blueprints are stored in the browser's localStorage as JSON. No server-side storage.
 
-### Integration with Existing Shipyard Service
-
-N/A for standalone tool — DryDock is independent from APEX_.
-
-## Known Unknowns
-
-| Item | Status | Impact |
-|------|--------|--------|
-| Operating empty mass formula | Mass depends on module combos non-linearly | Low — build time is informational only |
-
-All other unknowns have been resolved through systematic testing.
-
-## Resolved (from screenshot verification — 13 ships tested)
+## Resolved (from systematic testing — 52 regular ships)
 
 | Item | Resolution |
 |------|------------|
-| SSC formula | **`ceil(V/21)`** — not `floor()` as originally derived. 13/13 verified |
-| Hull plate formula | **`ceil(V^(2/3) / 2.07)`** — not `round(V^(2/3) / 2.06)`. 13/13 verified across BHP and LHP |
-| Command Bridge assignment | **Reactor-dependent:** no FTL→BRS, RCT/QCR→BR1, HPR/HYR→BR2. 13/13 verified |
-| Crew Quarters assignment | **Volume thresholds:** <1000→CQT, 1000-1999→CQS, 2000-2999→CQM, ≥3000→CQL. 11/11 verified |
-| HCB volume | **5250** — verified: component sum=5838, ceil(5838/21)=278 ✓ |
-| Auxiliary module volumes | **Do NOT contribute volume.** AGS adds 30t mass but volume/SSC/plates/emitters unchanged |
-| Stability System ticker | **STS** (stabilitySupportSystem) — in FIO under "electronic systems" category |
-| Vortex modules | **Colony ships only** — excluded from v1 |
-| Shield count = plate count | **Confirmed** — AWH=157=LHP on 5838m³ ship; APT=90=LHP on 2534m³ ship |
-| Blueprint slot layout | **Confirmed from screenshots** — selectable slots + auto-calculated rows |
-| Bridge/crew selectability | **NOT user-selectable** — auto-assigned by game, formulas derived |
-| Hull plate divisor universal | **Confirmed** — 2.07 works for both BHP and LHP |
-| Game volume display off-by-one | Occurs on some ships (5838→5837, 1638→1637) but not all. Use calculated sum for formulas |
+| SSC formula | `ceil(V/21)` — 52/52 verified |
+| Hull plate formula | `ceil(V^(2/3) / 2.07)` — 52/52 verified |
+| Command Bridge assignment | Reactor-dependent: no FTL→BRS, RCT/QCR→BR1, HPR/HYR→BR2 — 52/52 verified |
+| Crew Quarters assignment | Volume thresholds: ≤834→CQT, ≤2533→CQS, ≤3587→CQM, >3587→CQL — 52/52 verified |
+| FFC rule | 1 if FTL reactor, else 0 — 52/52 verified |
+| Emitter algorithm | Diminishing-multiplier: `working = rem × 20/(10+LFE)` — 47/47 FTL ships verified |
+| Volume model | Delta model from reference ship (963 m³) — 23 blueprints verified with zero error |
+| Mass formula | Exact BOM weight summation — 24 blueprints verified with zero error |
+| Build time | `mass / 50` — confirmed |
+| HCB volume delta | +4725 from reference — verified |
+| Auxiliary module volumes | Do NOT contribute volume. AGS adds 30t mass but volume/SSC/plates/emitters unchanged |
+| Stability System ticker | STS (stabilitySupportSystem) — in FIO under "electronic systems" category |
+| Vortex modules | Colony ships only — excluded from v1 |
+| Shield count = plate count | Confirmed — AWH=157=LHP on 5838m³ ship; APT=90=LHP on 2534m³ ship |
+| Blueprint slot layout | Confirmed from screenshots — selectable slots + auto-calculated rows |
+| Bridge/crew selectability | NOT user-selectable — auto-assigned by game, formulas derived |
+| Hull plate divisor universal | Confirmed — 2.07 works for all plate types |
+| Game volume display off-by-one | Occurs on some ships but not all. Use calculated sum for formulas |
 
 ## Sources
 
-- **Component volumes:** pct.fnar.net/ship-blueprints (PrUn Community Derived Information)
-- **SSC formula:** pct.fnar.net — `floor(volume / 21)`
-- **LHP/AWH formula:** Derived from Dan's 5 ships — `round(volume^(2/3) / 2.06)`
-- **Emitter algorithm:** Game developer molp, PrUn Community Forum (Oct 2022), corrected spans by SLKLS (Feb 2026)
-- **Emitter spans:** LFE=1050, MFE=260, SFE=100
-- **Build time:** PCT — `operating_empty_mass / 50`
-- **Shield/plate count parity:** RNGzero's Ship Repair Calc spreadsheet
-- **Dev blog context:** Development Logs #244, #252, #259, #260, #261
+- **Module performance data:** Wire-captured from PrUn WebSocket traffic via APEX_/PrUn-Link (Feb 2026)
+- **Volume delta model:** Derived from 29 isolation blueprints + validated against 23 player blueprints
+- **Auto-computed formulas:** Derived from 52 regular ship blueprints via systematic pattern analysis
+- **Emitter algorithm structure:** Original greedy algorithm from game developer molp (PrUn Community Forum, Oct 2022); constants and diminishing-multiplier behavior reverse-engineered Feb 2026
+- **Shield/plate count parity:** RNGzero's Ship Repair Calc spreadsheet (confirmed via WebSocket data)
+- **FIO material data:** FIO API `/material/allmaterials` endpoint
