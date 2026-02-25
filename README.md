@@ -12,6 +12,7 @@ Design a ship. See what it costs. Find the cheapest exchange to buy parts. Share
 - Auto-calculates derived components (structure, hull plates, shields, emitters, bridge, crew quarters)
 - Prices the full Bill of Materials across all 6 commodity exchanges and indicates if it's available and where
 - Shows cherry-pick sourcing (buy each part where it's cheapest/available)
+- ACT Packages: Generate XIT ACT packages to buy all your parts
 - Share blueprints as compact URLs — paste into Discord, forums, whatever. 
 - Import/Export (JSON) to backup transfer between browsers.
 - No account needed! :ohwow:
