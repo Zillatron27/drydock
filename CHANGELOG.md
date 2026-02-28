@@ -4,13 +4,16 @@
 
 ### Features
 - Add SET menu with accessibility settings panel
-- Font size selector (Default / Large / Extra Large) with live preview
+- Font size selector (Default / Medium / Large / Extra Large) with live preview
 - High contrast mode — boosts secondary text, muted text, and border visibility
 - Settings persist to localStorage and apply instantly
 - Reset to Defaults button restores original appearance
+- Add Edit and Duplicate buttons to blueprint cards
+- Restyle header buttons — Load Examples and SET now match Import/Export styling
 
 ### Bug Fixes
 - Fix font fallback stacks — `cursive` and bare `monospace` replaced with proper system font stacks
+- Remove redundant standalone Edit button from detail view (now on cards)
 
 ## 1.0.2 — Card Grid Fix (2026-02-24)
 
