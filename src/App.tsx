@@ -9,6 +9,8 @@ import BlueprintEditor from './components/BlueprintEditor';
 import ShipyardDetail from './components/ShipyardDetail';
 import StatsPanel from './components/StatsPanel';
 import ImportModal from './components/ImportModal';
+import SettingsModal from './components/SettingsModal';
+import { loadSettings, applySettings } from './services/settings';
 import {
   exportBlueprint,
   exportCollection,
@@ -61,9 +63,15 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pricesLoading, setPricesLoading] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const selectedBlueprint = blueprints.find(b => b.id === selectedId) ?? null;
   const editingBlueprint = blueprints.find(b => b.id === editingId);
+
+  // Apply saved accessibility settings on mount
+  useEffect(() => {
+    applySettings(loadSettings());
+  }, []);
 
   // Import blueprint from permalink on mount
   useEffect(() => {
@@ -123,9 +131,28 @@ export default function App() {
     if (selectedId === id) setSelectedId(null);
   }
 
-  function handleEdit(id: string) {
+  function handleEdit(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
     setEditingId(id);
     setEditorOpen(true);
+  }
+
+  function handleDuplicate(e: React.MouseEvent, blueprint: Blueprint) {
+    e.stopPropagation();
+    const existingNames = new Set(blueprints.map(b => b.name));
+    let name = `${blueprint.name} (copy)`;
+    let counter = 2;
+    while (existingNames.has(name)) {
+      name = `${blueprint.name} (copy ${counter})`;
+      counter++;
+    }
+    const dupe: Blueprint = {
+      id: crypto.randomUUID(),
+      name,
+      moduleSelections: { ...blueprint.moduleSelections },
+      bom: [...blueprint.bom],
+    };
+    persist([...blueprints, dupe]);
   }
 
   function handleSave(name: string, selections: ModuleSelections) {
@@ -207,6 +234,7 @@ export default function App() {
         onExportAll={handleExportAll}
         onDownloadAll={handleDownloadAll}
         onLoadPresets={handleLoadPresets}
+        onSettings={() => setSettingsOpen(true)}
       />
 
       <main className="main">
@@ -217,6 +245,8 @@ export default function App() {
               blueprint={bp}
               onClick={() => handleCardClick(bp.id)}
               onDelete={e => handleDelete(e, bp.id)}
+              onEdit={e => handleEdit(e, bp.id)}
+              onDuplicate={e => handleDuplicate(e, bp)}
               onShare={e => handleShare(e, bp)}
               onExport={e => handleExport(e, bp)}
             />
@@ -226,16 +256,13 @@ export default function App() {
 
         {selectedBlueprint && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-xl)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--gap-md)' }}>
-              <h2 style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: '1.1rem',
-                color: 'var(--accent)',
-              }}>
-                {selectedBlueprint.name}
-              </h2>
-              <button onClick={() => handleEdit(selectedBlueprint.id)}>Edit</button>
-            </div>
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '1.1rem',
+              color: 'var(--accent)',
+            }}>
+              {selectedBlueprint.name}
+            </h2>
             <StatsPanel selections={selectedBlueprint.moduleSelections} />
             <ShipyardDetail
               blueprintName={selectedBlueprint.name}
@@ -278,6 +305,10 @@ export default function App() {
           onImport={handleImportConfirm}
           onCancel={() => setImportOpen(false)}
         />
+      )}
+
+      {settingsOpen && (
+        <SettingsModal onClose={() => setSettingsOpen(false)} />
       )}
     </div>
   );

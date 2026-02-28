@@ -12,6 +12,10 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html[data-font-size="medium"] { font-size: 15px; }
+html[data-font-size="large"] { font-size: 16px; }
+html[data-font-size="xl"] { font-size: 18px; }
+
 body {
   font-family: var(--font-mono);
   background: var(--bg-primary);

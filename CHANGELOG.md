@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.3 — Settings & Accessibility (2026-02-28)
+
+### Features
+- Add SET menu with accessibility settings panel
+- Font size selector (Default / Large / Extra Large) with live preview
+- High contrast mode — boosts secondary text, muted text, and border visibility
+- Settings persist to localStorage and apply instantly
+- Reset to Defaults button restores original appearance
+
+### Bug Fixes
+- Fix font fallback stacks — `cursive` and bare `monospace` replaced with proper system font stacks
+
 ## 1.0.2 — Card Grid Fix (2026-02-24)
 
 ### Bug Fixes

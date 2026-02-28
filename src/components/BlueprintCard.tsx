@@ -7,11 +7,13 @@ interface BlueprintCardProps {
   blueprint: Blueprint;
   onClick: () => void;
   onDelete: (e: React.MouseEvent) => void;
+  onEdit: (e: React.MouseEvent) => void;
+  onDuplicate: (e: React.MouseEvent) => void;
   onExport: (e: React.MouseEvent) => Promise<boolean>;
   onShare: (e: React.MouseEvent) => Promise<boolean>;
 }
 
-export function BlueprintCard({ blueprint, onClick, onDelete, onExport, onShare }: BlueprintCardProps) {
+export function BlueprintCard({ blueprint, onClick, onDelete, onEdit, onDuplicate, onExport, onShare }: BlueprintCardProps) {
   const volume = calculateVolume(blueprint.moduleSelections);
   const materialCount = blueprint.bom.length;
   const [copied, setCopied] = useState(false);
@@ -49,6 +51,20 @@ export function BlueprintCard({ blueprint, onClick, onDelete, onExport, onShare 
           </button>
         </div>
         <div className={styles.cardActions}>
+          <button
+            className={styles.exportBtn}
+            onClick={onEdit}
+            title="Edit blueprint"
+          >
+            Edit
+          </button>
+          <button
+            className={styles.exportBtn}
+            onClick={onDuplicate}
+            title="Duplicate blueprint"
+          >
+            Dupe
+          </button>
           <button
             className={styles.exportBtn}
             onClick={handleShare}

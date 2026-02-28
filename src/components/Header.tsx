@@ -8,6 +8,7 @@ interface HeaderProps {
   onExportAll: () => Promise<boolean>;
   onDownloadAll: () => void;
   onLoadPresets: () => void;
+  onSettings: () => void;
 }
 
 export default function Header({
@@ -17,6 +18,7 @@ export default function Header({
   onExportAll,
   onDownloadAll,
   onLoadPresets,
+  onSettings,
 }: HeaderProps) {
   const [copied, setCopied] = useState(false);
 
@@ -50,11 +52,8 @@ export default function Header({
         <span className="tagline">Ship Blueprint Calculator</span>
       </div>
       <div className="header-actions">
-        <button
-          onClick={onLoadPresets}
-          style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}
-        >
-          Examples
+        <button onClick={onLoadPresets}>
+          Load Examples
         </button>
         <button onClick={onImport}>Import</button>
         <button
@@ -67,8 +66,12 @@ export default function Header({
           onClick={onDownloadAll}
           disabled={blueprintCount === 0}
           title="Download all blueprints as .json file"
+          style={{ fontSize: '1.3rem', lineHeight: 1 }}
         >
           &#8615;
+        </button>
+        <button onClick={onSettings}>
+          SET
         </button>
         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>v{VERSION}</span>
       </div>

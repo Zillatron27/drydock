@@ -50,8 +50,8 @@
     --cat-chemicals: #ff7eb3;
 
     /* Fonts */
-    --font-display: 'Audiowide', cursive;
-    --font-mono: 'IBM Plex Mono', monospace;
+    --font-display: 'Audiowide', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', 'Cascadia Mono', 'Consolas', ui-monospace, monospace;
 
     /* Spacing */
     --gap-xs: 0.25rem;
@@ -64,4 +64,12 @@
     --radius-sm: 4px;
     --radius-md: 6px;
     --radius-lg: 8px;
+}
+
+/* High contrast mode — boosted secondary/muted text and borders */
+html[data-high-contrast="true"] {
+    --text-secondary: #999999;
+    --text-muted: #777777;
+    --border: #555555;
+    --border-light: #444444;
 }
