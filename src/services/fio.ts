@@ -20,7 +20,7 @@ interface CacheEntry<T> {
 let priceCache: CacheEntry<FIOExchangeEntry[]> | null = null;
 let materialCache: CacheEntry<FIOMaterial[]> | null = null;
 
-/** Raw exchange price entry from FIO /exchange/all */
+/** Raw exchange price entry from FIO (normalized from /exchange/full) */
 export interface FIOExchangeEntry {
   MaterialTicker: string;
   ExchangeCode: string;
@@ -33,6 +33,12 @@ export interface FIOExchangeEntry {
   Supply: number | null;
   Demand: number | null;
   PriceAverage: number | null;
+}
+
+/** Raw response from FIO /exchange/full — includes order book arrays */
+interface FIOFullExchangeEntry extends FIOExchangeEntry {
+  SellingOrders: Array<{ Count: number; Cost: number }>;
+  BuyingOrders: Array<{ Count: number; Cost: number }>;
 }
 
 /** Raw material entry from FIO /material/allmaterials */
@@ -56,14 +62,41 @@ export async function fetchAllExchangePrices(): Promise<FIOExchangeEntry[]> {
     return priceCache.data;
   }
 
-  const response = await fetch(`${FIO_BASE}/exchange/all`);
+  const response = await fetch(`${FIO_BASE}/exchange/full`);
   if (!response.ok) {
     // Return stale data if available
     if (priceCache) return priceCache.data;
     throw new Error(`FIO exchange API returned ${response.status}`);
   }
 
-  const data: FIOExchangeEntry[] = await response.json();
+  const raw: FIOFullExchangeEntry[] = await response.json();
+  const data: FIOExchangeEntry[] = raw.map(entry => {
+    // Sum all orders at the best price level (aggregates across multiple players)
+    const askCountAtBest = entry.Ask != null
+      ? entry.SellingOrders
+          .filter(o => o.Cost === entry.Ask)
+          .reduce((sum, o) => sum + o.Count, 0)
+      : 0;
+    const bidCountAtBest = entry.Bid != null
+      ? entry.BuyingOrders
+          .filter(o => o.Cost === entry.Bid)
+          .reduce((sum, o) => sum + o.Count, 0)
+      : 0;
+
+    return {
+      MaterialTicker: entry.MaterialTicker,
+      ExchangeCode: entry.ExchangeCode,
+      MMBuy: entry.MMBuy,
+      MMSell: entry.MMSell,
+      Ask: entry.Ask,
+      AskCount: askCountAtBest,
+      Bid: entry.Bid,
+      BidCount: bidCountAtBest,
+      Supply: entry.Supply,
+      Demand: entry.Demand,
+      PriceAverage: entry.PriceAverage,
+    };
+  });
   priceCache = { data, fetchedAt: Date.now() };
   return data;
 }
