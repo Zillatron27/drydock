@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 — Remove Inactive Exchanges (2026-03-03)
+
+### Changes
+- Remove CI2 and NC2 exchanges — no meaningful trading activity
+- Pricing cards, BOM table, and cherry-pick sourcing now show 4 active exchanges (AI1, CI1, IC1, NC1)
+- Reduces visual noise and makes cherry-pick results more useful
+
 ## 1.0.3 — Settings & Accessibility (2026-02-28)
 
 ### Features

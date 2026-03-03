@@ -1,8 +1,8 @@
 import type { BOMEntry, ExchangeTotal, ExchangeLineItem, CherryPickResult, CherryPickItem } from '../types';
 import type { FIOExchangeEntry } from './fio';
 
-/** All 6 PrUn commodity exchanges */
-export const EXCHANGES = ['AI1', 'CI1', 'CI2', 'IC1', 'NC1', 'NC2'] as const;
+/** Active PrUn commodity exchanges (CI2/NC2 excluded — no meaningful activity) */
+export const EXCHANGES = ['AI1', 'CI1', 'IC1', 'NC1'] as const;
 
 /** Build a ticker+exchange → ask price lookup from FIO data */
 function buildPriceLookup(exchangePrices: FIOExchangeEntry[]): Map<string, number> {
