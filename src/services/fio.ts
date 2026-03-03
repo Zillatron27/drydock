@@ -37,8 +37,8 @@ export interface FIOExchangeEntry {
 
 /** Raw response from FIO /exchange/full — includes order book arrays */
 interface FIOFullExchangeEntry extends FIOExchangeEntry {
-  SellingOrders: Array<{ Count: number; Cost: number }>;
-  BuyingOrders: Array<{ Count: number; Cost: number }>;
+  SellingOrders: Array<{ ItemCount: number; ItemCost: number }>;
+  BuyingOrders: Array<{ ItemCount: number; ItemCost: number }>;
 }
 
 /** Raw material entry from FIO /material/allmaterials */
@@ -74,13 +74,13 @@ export async function fetchAllExchangePrices(): Promise<FIOExchangeEntry[]> {
     // Sum all orders at the best price level (aggregates across multiple players)
     const askCountAtBest = entry.Ask != null
       ? entry.SellingOrders
-          .filter(o => o.Cost === entry.Ask)
-          .reduce((sum, o) => sum + o.Count, 0)
+          .filter(o => o.ItemCost === entry.Ask)
+          .reduce((sum, o) => sum + o.ItemCount, 0)
       : 0;
     const bidCountAtBest = entry.Bid != null
       ? entry.BuyingOrders
-          .filter(o => o.Cost === entry.Bid)
-          .reduce((sum, o) => sum + o.Count, 0)
+          .filter(o => o.ItemCost === entry.Bid)
+          .reduce((sum, o) => sum + o.ItemCount, 0)
       : 0;
 
     return {
