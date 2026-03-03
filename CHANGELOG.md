@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 — Fix Availability Counts (2026-03-03)
+
+### Bug Fixes
+- Fix availability counts showing only a single order instead of total units at the best price
+- Switch from FIO `/exchange/all` to `/exchange/full` and aggregate all orders at the best ask/bid price
+- Example: LHP on CI1 with 3 ASK orders at 3,990 (50 + 48 + 11) now correctly shows 109 available
+
 ## 1.1.0 — Remove Inactive Exchanges (2026-03-03)
 
 ### Changes
