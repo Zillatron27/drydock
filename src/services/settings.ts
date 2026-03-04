@@ -1,11 +1,15 @@
+import type { PricingMode } from '../types';
+
 export interface DryDockSettings {
   fontSize: 'default' | 'medium' | 'large' | 'xl';
   highContrast: boolean;
+  pricingMode: PricingMode;
 }
 
 const DEFAULTS: DryDockSettings = {
   fontSize: 'default',
   highContrast: false,
+  pricingMode: 'best_price',
 };
 
 const STORAGE_KEY = 'drydock_settings';

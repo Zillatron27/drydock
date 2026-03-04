@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0 — Pricing Modes: Full Depth (2026-03-04)
+
+### Features
+- Add Full Depth pricing mode — walks the order book to show blended costs and realistic availability
+- Toggle between Best Price (cheapest ask) and Full Depth (order book walk) above exchange cards
+- Full Depth exchange totals reflect actual cost to fill BOM quantities across all price tiers
+- Full Depth availability counts show total supply across all ask levels, not just at best price
+- Cherry-pick in Full Depth mode selects cheapest blended cost per material across exchanges
+- Pricing mode persists to localStorage across sessions
+
+### Technical
+- Cache processed order book depth (sorted ask/bid tiers) alongside existing FIO exchange data
+- New `depth_pricing.ts` service with `fillFromOrderBook`, `depthPriceBlueprint`, `depthCherryPickPricing`
+- Unit tests for order book walking algorithm and depth pricing functions
+
 ## 1.1.1 — Fix Availability Counts (2026-03-03)
 
 ### Bug Fixes

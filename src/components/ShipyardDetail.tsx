@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { BOMEntry, MaterialCategory } from '../types';
+import type { BOMEntry, MaterialCategory, PricingMode, ExchangeTotal, ExchangeLineItem } from '../types';
 import { fetchAllExchangePrices, getPriceFetchedAt, isPriceStale } from '../services/fio';
 import type { FIOExchangeEntry } from '../services/fio';
 import { priceBlueprint, cherryPickPricing, EXCHANGES } from '../services/pricing';
+import { depthPriceBlueprint, depthCherryPickPricing } from '../services/depth_pricing';
+import { loadSettings, saveSettings } from '../services/settings';
 import { generateACTPackage, generateCherryPickACT, copyACTToClipboard } from '../services/act';
 import styles from './ShipyardDetail.module.css';
 
@@ -45,6 +47,7 @@ function analyzeExchange(
   bom: BOMEntry[],
   exchange: string,
   priceLookup: Map<string, FIOExchangeEntry>,
+  pricingMode: PricingMode = 'best_price',
 ): ExchangeAnalysis {
   let minBuildable = Infinity;
   let linesFull = 0;
@@ -53,7 +56,9 @@ function analyzeExchange(
 
   for (const entry of bom) {
     const data = priceLookup.get(`${entry.ticker}:${exchange}`);
-    const supply = data?.AskCount ?? 0;
+    const supply = pricingMode === 'full_depth'
+      ? (data?.orderBook.totalAskSupply ?? 0)
+      : (data?.AskCount ?? 0);
 
     if (supply >= entry.quantity) {
       linesFull++;
@@ -87,6 +92,7 @@ function analyzeCherryPick(
   bom: BOMEntry[],
   priceLookup: Map<string, FIOExchangeEntry>,
   bestPrices: Map<string, { exchange: string; price: number }>,
+  pricingMode: PricingMode = 'best_price',
 ): { status: BuildStatus; buildable: number } {
   let minBuildable = Infinity;
   let allFull = true;
@@ -102,7 +108,9 @@ function analyzeCherryPick(
 
     anyAvail = true;
     const data = priceLookup.get(`${entry.ticker}:${best.exchange}`);
-    const supply = data?.AskCount ?? 0;
+    const supply = pricingMode === 'full_depth'
+      ? (data?.orderBook.totalAskSupply ?? 0)
+      : (data?.AskCount ?? 0);
 
     if (supply < entry.quantity) allFull = false;
     const buildableForMat = entry.quantity > 0 ? Math.floor(supply / entry.quantity) : 0;
@@ -123,6 +131,7 @@ function buildCherryVerdict(
   bom: BOMEntry[],
   priceLookup: Map<string, FIOExchangeEntry>,
   bestPrices: Map<string, { exchange: string; price: number }>,
+  pricingMode: PricingMode = 'best_price',
 ): string {
   let full = 0;
   let partial = 0;
@@ -135,7 +144,9 @@ function buildCherryVerdict(
       continue;
     }
     const data = priceLookup.get(`${entry.ticker}:${best.exchange}`);
-    const supply = data?.AskCount ?? 0;
+    const supply = pricingMode === 'full_depth'
+      ? (data?.orderBook.totalAskSupply ?? 0)
+      : (data?.AskCount ?? 0);
     if (supply >= entry.quantity) {
       full++;
     } else if (supply > 0) {
@@ -157,6 +168,13 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [pricingMode, setPricingMode] = useState<PricingMode>(() => loadSettings().pricingMode);
+
+  const handleModeChange = useCallback((mode: PricingMode) => {
+    setPricingMode(mode);
+    const settings = loadSettings();
+    saveSettings({ ...settings, pricingMode: mode });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -180,13 +198,25 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
   }, [loading, onLoadingChange]);
 
   const exchangeTotals = useMemo(
-    () => prices ? priceBlueprint(bom, prices) : [],
-    [bom, prices],
+    () => {
+      if (!prices) return [];
+      if (pricingMode === 'full_depth') {
+        return EXCHANGES.map(ex => depthPriceBlueprint(bom, prices, ex));
+      }
+      return priceBlueprint(bom, prices);
+    },
+    [bom, prices, pricingMode],
   );
 
   const cherryPick = useMemo(
-    () => prices ? cherryPickPricing(bom, prices) : null,
-    [bom, prices],
+    () => {
+      if (!prices) return null;
+      if (pricingMode === 'full_depth') {
+        return depthCherryPickPricing(bom, prices);
+      }
+      return cherryPickPricing(bom, prices);
+    },
+    [bom, prices, pricingMode],
   );
 
   const cheapestExchange = useMemo(() => {
@@ -239,15 +269,15 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
   const exchangeAnalyses = useMemo(() => {
     const map = new Map<string, ExchangeAnalysis>();
     for (const ex of EXCHANGES) {
-      map.set(ex, analyzeExchange(bom, ex, priceLookup));
+      map.set(ex, analyzeExchange(bom, ex, priceLookup, pricingMode));
     }
     return map;
-  }, [bom, priceLookup]);
+  }, [bom, priceLookup, pricingMode]);
 
   // Cherry-pick availability analysis
   const cherryAnalysis = useMemo(
-    () => analyzeCherryPick(bom, priceLookup, bestPrices),
-    [bom, priceLookup, bestPrices],
+    () => analyzeCherryPick(bom, priceLookup, bestPrices, pricingMode),
+    [bom, priceLookup, bestPrices, pricingMode],
   );
 
   const handleCopyACT = useCallback(async (exchange: string) => {
@@ -314,6 +344,21 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
         </div>
       )}
 
+      <div className={styles.modeToggle}>
+        <button
+          className={`${styles.modeBtn} ${pricingMode === 'best_price' ? styles.modeBtnActive : ''}`}
+          onClick={() => handleModeChange('best_price')}
+        >
+          Best Price
+        </button>
+        <button
+          className={`${styles.modeBtn} ${pricingMode === 'full_depth' ? styles.modeBtnActive : ''}`}
+          onClick={() => handleModeChange('full_depth')}
+        >
+          Full Depth
+        </button>
+      </div>
+
       {/* Exchange summary cards */}
       <div className={styles.exchangeGrid}>
         {exchangeTotals.map(ex => {
@@ -368,7 +413,7 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
       {/* Cherry-pick */}
       {cherryPick && cherryPick.total > 0 && (() => {
         const cpBuildable = cherryAnalysis.status === 'full';
-        const verdict = buildCherryVerdict(bom, priceLookup, bestPrices);
+        const verdict = buildCherryVerdict(bom, priceLookup, bestPrices, pricingMode);
         const bestSingle = cheapestExchange
           ? exchangeTotals.find(e => e.exchange === cheapestExchange)
           : null;
@@ -441,6 +486,8 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
                   catLabel={i === 0 ? CATEGORY_LABELS[cat] : null}
                   priceLookup={priceLookup}
                   bestPrice={bestPrices.get(entry.ticker)}
+                  pricingMode={pricingMode}
+                  exchangeTotals={exchangeTotals}
                 />
               ));
             })}
@@ -457,9 +504,11 @@ interface BOMRowProps {
   catLabel: string | null;
   priceLookup: Map<string, FIOExchangeEntry>;
   bestPrice?: { exchange: string; price: number };
+  pricingMode: PricingMode;
+  exchangeTotals: ExchangeTotal[];
 }
 
-function BOMRow({ entry, catClass, catLabel, priceLookup, bestPrice }: BOMRowProps) {
+function BOMRow({ entry, catClass, catLabel, priceLookup, bestPrice, pricingMode, exchangeTotals }: BOMRowProps) {
   return (
     <>
       {catLabel && (
@@ -481,7 +530,14 @@ function BOMRow({ entry, catClass, catLabel, priceLookup, bestPrice }: BOMRowPro
           const data = priceLookup.get(`${entry.ticker}:${ex}`);
           return (
             <td key={ex} className={styles.priceCell}>
-              <ExchangeCell data={data ?? null} quantity={entry.quantity} />
+              <ExchangeCell
+                data={data ?? null}
+                quantity={entry.quantity}
+                pricingMode={pricingMode}
+                depthLineItem={pricingMode === 'full_depth'
+                  ? exchangeTotals.find(e => e.exchange === ex)?.breakdown.find(b => b.ticker === entry.ticker)
+                  : undefined}
+              />
             </td>
           );
         })}
@@ -501,7 +557,35 @@ function BOMRow({ entry, catClass, catLabel, priceLookup, bestPrice }: BOMRowPro
   );
 }
 
-function ExchangeCell({ data, quantity }: { data: FIOExchangeEntry | null; quantity: number }) {
+function ExchangeCell({ data, quantity, pricingMode, depthLineItem }: {
+  data: FIOExchangeEntry | null;
+  quantity: number;
+  pricingMode: PricingMode;
+  depthLineItem?: ExchangeLineItem;
+}) {
+  if (pricingMode === 'full_depth') {
+    if (!depthLineItem || depthLineItem.unitPrice === null) {
+      return <span className={styles.noPrice}>—</span>;
+    }
+
+    const supply = data?.orderBook.totalAskSupply ?? 0;
+    const supplyClass = supply >= quantity
+      ? styles.supplyFull
+      : supply > 0
+        ? styles.supplyPartial
+        : styles.supplyNone;
+
+    return (
+      <>
+        <div className={styles.cellPrice}>{formatPrice(depthLineItem.unitPrice)}</div>
+        <div className={`${styles.cellSupply} ${supplyClass}`}>
+          {supply.toLocaleString()} avail
+        </div>
+        <div className={styles.cellLine}>{formatCurrency(depthLineItem.lineTotal!)}</div>
+      </>
+    );
+  }
+
   if (!data || data.Ask === null || data.Ask <= 0) {
     return <span className={styles.noPrice}>—</span>;
   }

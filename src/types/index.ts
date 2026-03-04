@@ -136,3 +136,17 @@ export interface CollectionExport {
 export type ImportResult =
   | { success: true; entries: Array<{ name: string; modules: ModuleSelections }> }
   | { success: false; error: string };
+
+export type PricingMode = 'best_price' | 'full_depth';
+
+/** Processed order book depth — sorted price tiers with quantities */
+export interface OrderBookDepth {
+  /** Sell orders sorted by price ascending (cheapest first) */
+  asks: Array<{ price: number; quantity: number }>;
+  /** Buy orders sorted by price descending (highest first) */
+  bids: Array<{ price: number; quantity: number }>;
+  /** Total units available across all ask price levels */
+  totalAskSupply: number;
+  /** Total units across all bid price levels */
+  totalBidDemand: number;
+}

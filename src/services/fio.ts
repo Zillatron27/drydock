@@ -6,6 +6,8 @@
  * If this changes, we'll need a Cloudflare Worker proxy.
  */
 
+import type { OrderBookDepth } from '../types';
+
 const FIO_BASE = 'https://rest.fnar.net';
 
 // Cache TTLs
@@ -33,10 +35,20 @@ export interface FIOExchangeEntry {
   Supply: number | null;
   Demand: number | null;
   PriceAverage: number | null;
+  orderBook: OrderBookDepth;
 }
 
 /** Raw response from FIO /exchange/full — includes order book arrays */
-interface FIOFullExchangeEntry extends FIOExchangeEntry {
+interface FIOFullExchangeEntry {
+  MaterialTicker: string;
+  ExchangeCode: string;
+  MMBuy: number | null;
+  MMSell: number | null;
+  Ask: number | null;
+  Bid: number | null;
+  Supply: number | null;
+  Demand: number | null;
+  PriceAverage: number | null;
   SellingOrders: Array<{ ItemCount: number; ItemCost: number }>;
   BuyingOrders: Array<{ ItemCount: number; ItemCost: number }>;
 }
@@ -83,6 +95,15 @@ export async function fetchAllExchangePrices(): Promise<FIOExchangeEntry[]> {
           .reduce((sum, o) => sum + o.ItemCount, 0)
       : 0;
 
+    const asks = entry.SellingOrders
+      .map(o => ({ price: o.ItemCost, quantity: o.ItemCount }))
+      .sort((a, b) => a.price - b.price);
+    const bids = entry.BuyingOrders
+      .map(o => ({ price: o.ItemCost, quantity: o.ItemCount }))
+      .sort((a, b) => b.price - a.price);
+    const totalAskSupply = asks.reduce((sum, o) => sum + o.quantity, 0);
+    const totalBidDemand = bids.reduce((sum, o) => sum + o.quantity, 0);
+
     return {
       MaterialTicker: entry.MaterialTicker,
       ExchangeCode: entry.ExchangeCode,
@@ -95,6 +116,7 @@ export async function fetchAllExchangePrices(): Promise<FIOExchangeEntry[]> {
       Supply: entry.Supply,
       Demand: entry.Demand,
       PriceAverage: entry.PriceAverage,
+      orderBook: { asks, bids, totalAskSupply, totalBidDemand },
     };
   });
   priceCache = { data, fetchedAt: Date.now() };

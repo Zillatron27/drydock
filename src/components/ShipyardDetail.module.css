@@ -378,6 +378,44 @@
   color: var(--warning);
 }
 
+/* Pricing mode toggle */
+.modeToggle {
+  display: flex;
+  gap: 0;
+}
+
+.modeBtn {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.modeBtn:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.modeBtn:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-left: none;
+}
+
+.modeBtn:hover:not(.modeBtnActive) {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.modeBtnActive {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-primary);
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
   .exchangeGrid {
