@@ -18,6 +18,7 @@ interface ACTAction {
   exchange: string;
   priceLimits: Record<string, never>;
   buyPartial: boolean;
+  allowUnfilled: boolean;
   useCXInv: boolean;
   name: string;
   type: 'CX Buy';
@@ -36,6 +37,11 @@ function buildSupplyLookup(exchangePrices: FIOExchangeEntry[]): Map<string, Set<
   return lookup;
 }
 
+/** Sanitize name for ACT — non-ASCII and special characters break rPrun's command parser */
+function sanitizeName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9 ._-]/g, '-');
+}
+
 /** Generate ACT package for buying all BOM materials at a single exchange */
 export function generateACTPackage(
   blueprintName: string,
@@ -44,7 +50,8 @@ export function generateACTPackage(
   exchangePrices: FIOExchangeEntry[],
 ): ACTPackage {
   const supplyLookup = buildSupplyLookup(exchangePrices);
-  const groupName = `${blueprintName} Parts`;
+  const safeName = sanitizeName(blueprintName);
+  const groupName = `${safeName} Parts`;
 
   // Only include materials with supply at this exchange
   const materials: Record<string, number> = {};
@@ -56,15 +63,16 @@ export function generateACTPackage(
   }
 
   return {
-    global: { name: `Ship ${blueprintName} ${exchange}` },
+    global: { name: `Ship ${safeName} ${exchange}` },
     groups: [{ materials, name: groupName, type: 'Manual' }],
     actions: [{
       group: groupName,
       exchange,
       priceLimits: {},
       buyPartial: false,
+      allowUnfilled: false,
       useCXInv: true,
-      name: `Buy ${blueprintName}`,
+      name: `Buy ${safeName}`,
       type: 'CX Buy',
     }],
   };
@@ -75,6 +83,7 @@ export function generateCherryPickACT(
   blueprintName: string,
   cherryPickItems: CherryPickItem[],
 ): ACTPackage {
+  const safeName = sanitizeName(blueprintName);
   // Group materials by their best exchange
   const byExchange = new Map<string, Record<string, number>>();
   for (const item of cherryPickItems) {
@@ -87,13 +96,14 @@ export function generateCherryPickACT(
   const actions: ACTAction[] = [];
 
   for (const [exchange, materials] of byExchange) {
-    const groupName = `${blueprintName} — ${exchange}`;
+    const groupName = `${safeName} - ${exchange}`;
     groups.push({ materials, name: groupName, type: 'Manual' });
     actions.push({
       group: groupName,
       exchange,
       priceLimits: {},
       buyPartial: false,
+      allowUnfilled: false,
       useCXInv: true,
       name: `Buy from ${exchange}`,
       type: 'CX Buy',
@@ -101,7 +111,7 @@ export function generateCherryPickACT(
   }
 
   return {
-    global: { name: `Ship ${blueprintName} Cherry Pick` },
+    global: { name: `Ship ${safeName} Cherry Pick` },
     groups,
     actions,
   };
