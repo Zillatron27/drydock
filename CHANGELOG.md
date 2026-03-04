@@ -10,6 +10,11 @@
 - Cherry-pick in Full Depth mode selects cheapest blended cost per material across exchanges
 - Pricing mode persists to localStorage across sessions
 
+### Bug Fixes
+- Fix ACT package names — sanitize to ASCII-safe characters so rPrun's command parser doesn't reject on execute
+- Fix pricing mode toggle color to use `--accent` token instead of undefined `--color-amber`
+- Increase toggle button size for readability
+
 ### Technical
 - Cache processed order book depth (sorted ask/bid tiers) alongside existing FIO exchange data
 - New `depth_pricing.ts` service with `fillFromOrderBook`, `depthPriceBlueprint`, `depthCherryPickPricing`
