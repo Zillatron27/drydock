@@ -1,4 +1,4 @@
-import type { BOMEntry, ExchangeTotal, ExchangeLineItem, CherryPickResult, CherryPickItem } from '../types';
+import type { BOMEntry, ExchangeTotal, ExchangeLineItem, CherryPickResult, CherryPickItem, ExchangeFilter } from '../types';
 import type { FIOExchangeEntry } from './fio';
 import { EXCHANGES } from './pricing';
 
@@ -83,10 +83,11 @@ export function depthPriceBlueprint(
   return { exchange, total, available, missing, breakdown };
 }
 
-/** Cherry-pick using blended costs across exchanges. */
+/** Cherry-pick using blended costs across enabled exchanges. */
 export function depthCherryPickPricing(
   bom: BOMEntry[],
   exchangePrices: FIOExchangeEntry[],
+  enabledExchanges?: ExchangeFilter,
 ): CherryPickResult {
   // Build ticker+exchange → FIOExchangeEntry lookup
   const lookup = new Map<string, FIOExchangeEntry>();
@@ -94,6 +95,7 @@ export function depthCherryPickPricing(
     lookup.set(`${entry.MaterialTicker}:${entry.ExchangeCode}`, entry);
   }
 
+  const exchanges = EXCHANGES.filter(ex => !enabledExchanges || enabledExchanges[ex] !== false);
   let total = 0;
   const items: CherryPickItem[] = [];
 
@@ -103,7 +105,7 @@ export function depthCherryPickPricing(
     let bestUnitPrice = 0;
     let bestLineTotal = 0;
 
-    for (const exchange of EXCHANGES) {
+    for (const exchange of exchanges) {
       const data = lookup.get(`${entry.ticker}:${exchange}`);
       if (!data || data.orderBook.asks.length === 0) continue;
 

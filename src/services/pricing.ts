@@ -1,4 +1,4 @@
-import type { BOMEntry, ExchangeTotal, ExchangeLineItem, CherryPickResult, CherryPickItem } from '../types';
+import type { BOMEntry, ExchangeTotal, ExchangeLineItem, CherryPickResult, CherryPickItem, ExchangeFilter } from '../types';
 import type { FIOExchangeEntry } from './fio';
 
 /** Active PrUn commodity exchanges (CI2/NC2 excluded — no meaningful activity) */
@@ -43,9 +43,14 @@ export function priceBlueprint(bom: BOMEntry[], exchangePrices: FIOExchangeEntry
   });
 }
 
-/** Find the cheapest source for each material across all exchanges */
-export function cherryPickPricing(bom: BOMEntry[], exchangePrices: FIOExchangeEntry[]): CherryPickResult {
+/** Find the cheapest source for each material across enabled exchanges */
+export function cherryPickPricing(
+  bom: BOMEntry[],
+  exchangePrices: FIOExchangeEntry[],
+  enabledExchanges?: ExchangeFilter,
+): CherryPickResult {
   const lookup = buildPriceLookup(exchangePrices);
+  const exchanges = EXCHANGES.filter(ex => !enabledExchanges || enabledExchanges[ex] !== false);
   let total = 0;
   const items: CherryPickItem[] = [];
 
@@ -53,7 +58,7 @@ export function cherryPickPricing(bom: BOMEntry[], exchangePrices: FIOExchangeEn
     let bestPrice = Infinity;
     let bestExchange = '';
 
-    for (const exchange of EXCHANGES) {
+    for (const exchange of exchanges) {
       const price = lookup.get(`${entry.ticker}:${exchange}`);
       if (price !== undefined && price < bestPrice) {
         bestPrice = price;

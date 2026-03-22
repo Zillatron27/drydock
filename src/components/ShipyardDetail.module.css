@@ -222,6 +222,22 @@
   border: 1px solid var(--accent-dim);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.exchangeCostTag:hover {
+  border-color: var(--accent);
+}
+
+.exchangeCostTagDisabled {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  border-color: var(--border-light);
+}
+
+.exchangeCostTagDisabled:hover {
+  border-color: var(--text-muted);
 }
 
 .cherrySavings {

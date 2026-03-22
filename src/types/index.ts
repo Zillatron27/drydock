@@ -139,6 +139,9 @@ export type ImportResult =
 
 export type PricingMode = 'best_price' | 'full_depth';
 
+/** Per-exchange enabled/disabled state for cherry-pick filtering */
+export type ExchangeFilter = Record<string, boolean>;
+
 /** Processed order book depth — sorted price tiers with quantities */
 export interface OrderBookDepth {
   /** Sell orders sorted by price ascending (cheapest first) */

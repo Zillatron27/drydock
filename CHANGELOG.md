@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.0 — Cherry-Pick Exchange Filter (2026-03-22)
+
+### Features
+- Exchange badges in the cherry-pick pane are now clickable toggles — click to exclude an exchange from cherry-pick sourcing
+- Disabled exchanges appear visually muted; cherry-pick total, sourcing, status, and ACT generation recalculate live
+- At least one exchange must remain enabled (last badge won't toggle off)
+- Filter persists to localStorage as a user preference across sessions and blueprints
+
+### Technical
+- `cherryPickPricing()` and `depthCherryPickPricing()` accept optional `enabledExchanges` filter parameter
+- `ExchangeFilter` type added; `DryDockSettings` extended with `cherryPickExchanges`
+- New test suite for cherry-pick filter behaviour (both pricing modes)
+
 ## 1.2.0 — Pricing Modes: Full Depth (2026-03-04)
 
 ### Features

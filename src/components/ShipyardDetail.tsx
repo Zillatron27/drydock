@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { BOMEntry, MaterialCategory, PricingMode, ExchangeTotal, ExchangeLineItem } from '../types';
+import type { BOMEntry, MaterialCategory, PricingMode, ExchangeTotal, ExchangeLineItem, ExchangeFilter } from '../types';
 import { fetchAllExchangePrices, getPriceFetchedAt, isPriceStale } from '../services/fio';
 import type { FIOExchangeEntry } from '../services/fio';
 import { priceBlueprint, cherryPickPricing, EXCHANGES } from '../services/pricing';
@@ -169,11 +169,24 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
   const [retryCount, setRetryCount] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [pricingMode, setPricingMode] = useState<PricingMode>(() => loadSettings().pricingMode);
+  const [enabledExchanges, setEnabledExchanges] = useState<ExchangeFilter>(() => loadSettings().cherryPickExchanges);
 
   const handleModeChange = useCallback((mode: PricingMode) => {
     setPricingMode(mode);
     const settings = loadSettings();
     saveSettings({ ...settings, pricingMode: mode });
+  }, []);
+
+  const handleToggleExchange = useCallback((exchange: string) => {
+    setEnabledExchanges(prev => {
+      const enabledCount = Object.values(prev).filter(Boolean).length;
+      // Don't allow disabling the last enabled exchange
+      if (prev[exchange] && enabledCount <= 1) return prev;
+      const next = { ...prev, [exchange]: !prev[exchange] };
+      const settings = loadSettings();
+      saveSettings({ ...settings, cherryPickExchanges: next });
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -212,11 +225,11 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
     () => {
       if (!prices) return null;
       if (pricingMode === 'full_depth') {
-        return depthCherryPickPricing(bom, prices);
+        return depthCherryPickPricing(bom, prices, enabledExchanges);
       }
-      return cherryPickPricing(bom, prices);
+      return cherryPickPricing(bom, prices, enabledExchanges);
     },
-    [bom, prices, pricingMode],
+    [bom, prices, pricingMode, enabledExchanges],
   );
 
   const cheapestExchange = useMemo(() => {
@@ -245,6 +258,18 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
     return map;
   }, [cherryPick]);
 
+  // Unfiltered cherry-pick for badge cost labels (so disabled badges keep their values)
+  const unfilteredCherryPick = useMemo(
+    () => {
+      if (!prices) return null;
+      if (pricingMode === 'full_depth') {
+        return depthCherryPickPricing(bom, prices);
+      }
+      return cherryPickPricing(bom, prices);
+    },
+    [bom, prices, pricingMode],
+  );
+
   // Cherry-pick source counts for display
   const cherrySourceCounts = useMemo(() => {
     if (!cherryPick) return [];
@@ -255,15 +280,15 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
   }, [cherryPick]);
 
-  // Cherry-pick per-exchange cost subtotals
+  // Cherry-pick per-exchange cost subtotals (unfiltered, so disabled badges keep their values)
   const cherryExchangeCosts = useMemo(() => {
-    if (!cherryPick) return [];
+    if (!unfilteredCherryPick) return new Map<string, number>();
     const costs = new Map<string, number>();
-    for (const item of cherryPick.items) {
+    for (const item of unfilteredCherryPick.items) {
       costs.set(item.bestExchange, (costs.get(item.bestExchange) ?? 0) + item.lineTotal);
     }
-    return Array.from(costs.entries()).sort((a, b) => b[1] - a[1]);
-  }, [cherryPick]);
+    return costs;
+  }, [unfilteredCherryPick]);
 
   // Per-exchange availability analysis
   const exchangeAnalyses = useMemo(() => {
@@ -436,9 +461,19 @@ export default function ShipyardDetail({ blueprintName, bom, onLoadingChange }: 
                 {formatCurrency(cherryPick.total)}
               </div>
               <div className={styles.cherryBreakdown}>
-                {cherryExchangeCosts.map(([ex, cost]) => (
-                  <span key={ex} className={styles.exchangeCostTag}>{ex}: {formatCurrency(cost)}</span>
-                ))}
+                {EXCHANGES.map(ex => {
+                  const cost = cherryExchangeCosts.get(ex);
+                  const enabled = enabledExchanges[ex] !== false;
+                  return (
+                    <span
+                      key={ex}
+                      className={`${styles.exchangeCostTag} ${enabled ? '' : styles.exchangeCostTagDisabled}`}
+                      onClick={() => handleToggleExchange(ex)}
+                    >
+                      {ex}{cost !== undefined ? `: ${formatCurrency(cost)}` : ''}
+                    </span>
+                  );
+                })}
               </div>
               <div className={styles.cherrySources}>
                 {cherrySourceCounts.map(([ex, count]) => (

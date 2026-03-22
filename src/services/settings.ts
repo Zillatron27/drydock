@@ -1,15 +1,22 @@
-import type { PricingMode } from '../types';
+import type { PricingMode, ExchangeFilter } from '../types';
+import { EXCHANGES } from './pricing';
 
 export interface DryDockSettings {
   fontSize: 'default' | 'medium' | 'large' | 'xl';
   highContrast: boolean;
   pricingMode: PricingMode;
+  cherryPickExchanges: ExchangeFilter;
 }
+
+const DEFAULT_EXCHANGE_FILTER: ExchangeFilter = Object.fromEntries(
+  EXCHANGES.map(ex => [ex, true]),
+);
 
 const DEFAULTS: DryDockSettings = {
   fontSize: 'default',
   highContrast: false,
   pricingMode: 'best_price',
+  cherryPickExchanges: { ...DEFAULT_EXCHANGE_FILTER },
 };
 
 const STORAGE_KEY = 'drydock_settings';
@@ -17,11 +24,21 @@ const STORAGE_KEY = 'drydock_settings';
 export function loadSettings(): DryDockSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULTS };
+    if (!raw) return { ...DEFAULTS, cherryPickExchanges: { ...DEFAULT_EXCHANGE_FILTER } };
     const parsed = JSON.parse(raw) as Partial<DryDockSettings>;
-    return { ...DEFAULTS, ...parsed };
+    // Ensure all known exchanges are present; unknown keys default to enabled
+    const storedFilter = parsed.cherryPickExchanges;
+    const cherryPickExchanges = { ...DEFAULT_EXCHANGE_FILTER };
+    if (storedFilter && typeof storedFilter === 'object') {
+      for (const ex of EXCHANGES) {
+        if (typeof storedFilter[ex] === 'boolean') {
+          cherryPickExchanges[ex] = storedFilter[ex];
+        }
+      }
+    }
+    return { ...DEFAULTS, ...parsed, cherryPickExchanges };
   } catch {
-    return { ...DEFAULTS };
+    return { ...DEFAULTS, cherryPickExchanges: { ...DEFAULT_EXCHANGE_FILTER } };
   }
 }
 
@@ -46,7 +63,7 @@ export function applySettings(settings: DryDockSettings): void {
 }
 
 export function resetSettings(): DryDockSettings {
-  const defaults = { ...DEFAULTS };
+  const defaults = { ...DEFAULTS, cherryPickExchanges: { ...DEFAULT_EXCHANGE_FILTER } };
   saveSettings(defaults);
   applySettings(defaults);
   return defaults;
