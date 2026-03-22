@@ -138,35 +138,37 @@ describe('getBridge', () => {
 });
 
 describe('getCrewQuarters', () => {
-  it('returns CQT for volume <= 834', () => {
+  it('returns CQT for volume <= 999', () => {
     expect(getCrewQuarters(834)).toBe('CQT');
     expect(getCrewQuarters(500)).toBe('CQT');
+    expect(getCrewQuarters(999)).toBe('CQT');
   });
 
-  it('returns CQS for 835 <= volume <= 2533', () => {
-    expect(getCrewQuarters(960)).toBe('CQS');
+  it('returns CQS for 1000 <= volume <= 1749', () => {
+    expect(getCrewQuarters(1000)).toBe('CQS');
     expect(getCrewQuarters(1485)).toBe('CQS');
     expect(getCrewQuarters(1611)).toBe('CQS');
   });
 
-  it('returns CQM for 2534 <= volume <= 3587', () => {
+  it('returns CQM for 1750 <= volume <= 2749', () => {
+    expect(getCrewQuarters(1750)).toBe('CQM');
     expect(getCrewQuarters(2535)).toBe('CQM');
-    expect(getCrewQuarters(2819)).toBe('CQM');
-    expect(getCrewQuarters(3584)).toBe('CQM');
+    expect(getCrewQuarters(2749)).toBe('CQM');
   });
 
-  it('returns CQL for volume > 3587', () => {
-    expect(getCrewQuarters(3588)).toBe('CQL');
+  it('returns CQL for volume >= 2750', () => {
+    expect(getCrewQuarters(2750)).toBe('CQL');
+    expect(getCrewQuarters(2819)).toBe('CQL');
     expect(getCrewQuarters(5838)).toBe('CQL');
   });
 
   it('handles exact boundaries', () => {
-    expect(getCrewQuarters(834)).toBe('CQT');
-    expect(getCrewQuarters(835)).toBe('CQS');
-    expect(getCrewQuarters(2533)).toBe('CQS');
-    expect(getCrewQuarters(2534)).toBe('CQM');
-    expect(getCrewQuarters(3587)).toBe('CQM');
-    expect(getCrewQuarters(3588)).toBe('CQL');
+    expect(getCrewQuarters(999)).toBe('CQT');
+    expect(getCrewQuarters(1000)).toBe('CQS');
+    expect(getCrewQuarters(1749)).toBe('CQS');
+    expect(getCrewQuarters(1750)).toBe('CQM');
+    expect(getCrewQuarters(2749)).toBe('CQM');
+    expect(getCrewQuarters(2750)).toBe('CQL');
   });
 });
 
@@ -420,8 +422,8 @@ describe('calculateMass', () => {
     };
     const volume = calculateVolume(selections);
     expect(volume).toBe(963);
-    // Verified: sum(bomWeight × quantity) = 827.8 exactly
-    expect(calculateMass(selections, volume)).toBeCloseTo(827.8, 1);
+    // CQT at vol=963 (threshold corrected to 999), mass = 815.3
+    expect(calculateMass(selections, volume)).toBeCloseTo(815.3, 1);
   });
 
   it('computes mass for STL-only ship', () => {

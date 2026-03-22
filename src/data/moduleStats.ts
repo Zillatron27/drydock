@@ -149,11 +149,11 @@ export const NO_FTL_DELTA = {
   weightDelta: -160.3,
 } as const;
 
-// Crew quarters volume thresholds (validated 52/52 ships)
+// Crew quarters volume thresholds (validated 52/52 ships, refined with 17 in-game blueprints — thresholds at 1000/1750/2750)
 export const CQ_THRESHOLDS: ReadonlyArray<{ maxVolume: number | null; ticker: string }> = [
-  { maxVolume: 834, ticker: 'CQT' },
-  { maxVolume: 2533, ticker: 'CQS' },
-  { maxVolume: 3587, ticker: 'CQM' },
+  { maxVolume: 999, ticker: 'CQT' },
+  { maxVolume: 1749, ticker: 'CQS' },
+  { maxVolume: 2749, ticker: 'CQM' },
   { maxVolume: null, ticker: 'CQL' },
 ];
 
