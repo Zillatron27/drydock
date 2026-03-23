@@ -12,7 +12,7 @@ This model is used by [DryDock](https://drydock.cc).
 
 ## Volume
 
-Most other auto-calculated values derive from the ship's Volume. However, this can't be calculated by simply adding up per-module volumes. Each module's contribution depends on the full ship configuration because auto-computed components (structure, hull plates, shields, emitters) cascade from total volume.
+Most auto-calculated values derive from the ship's Volume. However, this can't be calculated by simply adding up per-module volumes. Each module's contribution depends on the full ship configuration because auto-computed components (structure, hull plates, shields, emitters) cascade from total volume.
 
 Instead, volume is calculated using a **delta model**: starting from a known reference ship, then applying per-slot deltas when modules differ from the reference.
 
