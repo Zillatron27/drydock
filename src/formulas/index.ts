@@ -85,7 +85,7 @@ export function getBridge(ftlReactor: string | null): string {
   return BRIDGE_MAP[stats.option] ?? 'BRS';
 }
 
-/** Crew quarters depend on volume thresholds (validated 52/52 ships) */
+/** Crew quarters depend on volume thresholds (validated 52/52 ships, refined with 17 in-game blueprints) */
 export function getCrewQuarters(volume: number): string {
   for (const { maxVolume, ticker } of CQ_THRESHOLDS) {
     if (maxVolume === null || volume <= maxVolume) return ticker;

@@ -285,7 +285,7 @@ describe('calculateBOM', () => {
     expect(byTicker['BHP']).toBe(calculatePlates(834));
     expect(byTicker['SSC']).toBe(calculateSSC(834));
     expect(byTicker['BRS']).toBe(1);    // no FTL → BRS
-    expect(byTicker['CQT']).toBe(1);    // vol <= 834
+    expect(byTicker['CQT']).toBe(1);    // vol=834 < 1000 → CQT
 
     // No FTL components
     expect(byTicker['FFC']).toBeUndefined();
@@ -321,7 +321,7 @@ describe('calculateBOM', () => {
     expect(byTicker['SSC']).toBe(calculateSSC(vol));
     expect(byTicker['FFC']).toBe(1);
     expect(byTicker['BR1']).toBe(1);   // QCR → BR1
-    expect(byTicker['CQL']).toBe(1);   // vol > 3587
+    expect(byTicker['CQL']).toBe(1);   // vol=5821 >= 2750 → CQL
   });
 
   it('includes optional equipment as 1 unit', () => {
@@ -400,12 +400,41 @@ describe('calculateBOM', () => {
     expect(byTicker['LFE']).toBe(emitters.large);
     expect(byTicker['MFE']).toBe(emitters.medium);
     expect(byTicker['SFE']).toBe(emitters.small);
+    expect(byTicker['CQM']).toBe(1);  // vol=2677, 1750 <= 2677 < 2750 → CQM
+  });
+
+  it('assigns CQL for vol=2819 LCB STL freighter (regression: was wrongly CQM)', () => {
+    // Reported bug: player building ENG+LSL+LCB+BHP got CQM instead of CQL
+    const selections: ModuleSelections = {
+      stlEngine: 'ENG',
+      stlFuelTank: 'LSL',
+      cargoBay: 'LCB',
+      ftlReactor: null,
+      ftlFuelTank: null,
+      hullPlates: 'BHP',
+      heatShielding: null,
+      whippleShielding: null,
+      stabilitySystem: null,
+      radiationShielding: null,
+      selfRepairDrones: null,
+      highGSeats: null,
+    };
+
+    const bom = calculateBOM(selections);
+    const byTicker = Object.fromEntries(bom.map(e => [e.ticker, e.quantity]));
+
+    expect(calculateVolume(selections)).toBe(2819);
+    expect(byTicker['CQL']).toBe(1);    // vol=2819 >= 2750 → CQL
+    expect(byTicker['CQM']).toBeUndefined();
   });
 });
 
 describe('calculateMass', () => {
   it('computes exact mass for VOL-BASE reference ship', () => {
-    // Reference ship: ENG + SSL + RCT + SFL + SCB + BHP → vol=963, mass=827.8
+    // ENG+SSL+RCT+SFL+SCB+BHP → vol=963
+    // Manual sum: ENG(8) + SSL(20) + RCT(7) + SFL(9) + SCB(50) + BHP(9×48)
+    //   + SSC(1×46) + BR1(180) + CQT(12.5) + FFC(50) + MFE(0.2×3) + SFE(0.1×2)
+    //   = 8 + 20 + 7 + 9 + 50 + 432 + 46 + 180 + 12.5 + 50 + 0.6 + 0.2 = 815.3
     const selections: ModuleSelections = {
       stlEngine: 'ENG',
       stlFuelTank: 'SSL',
@@ -422,11 +451,20 @@ describe('calculateMass', () => {
     };
     const volume = calculateVolume(selections);
     expect(volume).toBe(963);
-    // CQT at vol=963 (threshold corrected to 999), mass = 815.3
+    // Verify derived components
+    expect(calculateSSC(volume)).toBe(46);
+    expect(calculatePlates(volume)).toBe(48);
+    expect(getCrewQuarters(volume)).toBe('CQT');   // vol=963 < 1000
+    expect(getBridge('RCT')).toBe('BR1');
+    const emitters = calculateEmitters(volume);
+    expect(emitters).toEqual({ large: 0, medium: 3, small: 2 });
     expect(calculateMass(selections, volume)).toBeCloseTo(815.3, 1);
   });
 
-  it('computes mass for STL-only ship', () => {
+  it('computes exact mass for STL-only ship', () => {
+    // ENG+SSL+SCB+BHP, vol=834, no FTL
+    // Manual sum: ENG(8) + SSL(20) + SCB(50) + BHP(9×43) + SSC(1×40)
+    //   + BRS(150) + CQT(12.5) = 8 + 20 + 50 + 387 + 40 + 150 + 12.5 = 667.5
     const selections: ModuleSelections = {
       stlEngine: 'ENG',
       stlFuelTank: 'SSL',
@@ -443,10 +481,12 @@ describe('calculateMass', () => {
     };
     const volume = calculateVolume(selections);
     expect(volume).toBe(834);
-    const mass = calculateMass(selections, volume);
-    // No FTL components → lighter than reference ship
-    expect(mass).toBeGreaterThan(0);
-    expect(mass).toBeLessThan(827.8);
+    // Verify derived components used in mass calc
+    expect(calculateSSC(volume)).toBe(40);
+    expect(calculatePlates(volume)).toBe(43);
+    expect(getCrewQuarters(volume)).toBe('CQT');   // vol=834 < 1000
+    expect(getBridge(null)).toBe('BRS');
+    expect(calculateMass(selections, volume)).toBeCloseTo(667.5, 1);
   });
 });
 
