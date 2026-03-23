@@ -135,7 +135,7 @@ The number of hull plates is determined by a surface area approximation. The for
 plate_count = ceil(volume^(2/3) / 2.07)
 ```
 
-The divisor is **2.07** - Validated across 52 ships with all five plate types.
+Validated: across 52 ships with all five plate types.
 
 ---
 
