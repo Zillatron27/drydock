@@ -1,20 +1,20 @@
 # Ship Blueprint Formulas — Reference Guide
 
 **Last Updated:** 2026-03-23
-**DryDock Version:** 1.3.0
-**Validation:** 17+ purpose-built test blueprints plus 52 player ship blueprints
+**DryDock Version:** 1.4.0
+**Validation:** 52 ship blueprints + 17 for volume validation
 
-This document describes how Prosperous Universe calculates ship stats from a blueprint's module selections. These formulas were reverse-engineered by building isolation blueprints in-game, varying one module at a time, and recording the results. Every formula has been validated against real in-game data with zero error.
+This document describes how Prosperous Universe calculates ship stats from a blueprint's module selections. These formulas were reverse-engineered by building isolation blueprints in-game, varying one module at a time and recording the results. Formula's have been validated against the in-game data but may still contain errors. 
 
-This is the reference used by [DryDock](https://drydock.cc), a community ship blueprint cost calculator.
+This is model used by [DryDock](https://drydock.cc).
 
 ---
 
-## Volume — The Delta Model
+## Volume
 
-Ship volume is the foundation — most other auto-calculated values derive from it. However, volume can't be calculated by simply adding up per-module volumes. Each module's contribution depends on the full ship configuration because auto-computed components (structure, plates, shields, emitters) cascade from total volume.
+Most other auto-calculated values derive from the ship's Volume. However, this can't be calculated by simply adding up per-module volumes. Each module's contribution depends on the full ship configuration because auto-computed components (structure, hull plates, shields, emitters) cascade from total volume.
 
-Instead, volume is calculated using a **delta model**: start from a known reference ship, then apply per-slot deltas when modules differ from the reference.
+Instead, volume is calculated using a **delta model**: starting from a known reference ship, then applying per-slot deltas when modules differ from the reference.
 
 ### Reference Ship
 
@@ -85,7 +85,7 @@ For each slot, the delta is the volume difference when swapping from the referen
 
 ### STL-Only Ships
 
-When both FTL Reactor and FTL Fuel Tank are empty (no FTL capability), apply an additional **−129** volume delta. This removes the reference ship's FTL contribution from the total.
+When both FTL Reactor and FTL Fuel Tank modles aren't fitted (no FTL capability), apply an additional **−129** volume delta. This removes the reference ship's FTL contribution from the total.
 
 ### Calculating Total Volume
 
@@ -96,7 +96,7 @@ If no FTL reactor and no FTL fuel tank:
     total_volume += (−129)
 ```
 
-### Worked Example
+### Example
 
 **Ship:** FSE + LSL + LCB + LHP, no FTL
 
@@ -111,31 +111,31 @@ No FTL:             −129
 Total:              2818 m³
 ```
 
-Validated: matches in-game BLU display exactly.
+Validated: matches in-game BLU display.
 
 ---
 
 ## Structure (SSC)
 
-Every ship needs structural components to hold it together. The count scales linearly with volume.
+Every ship needs structural components - The count scales linearly with volume.
 
 ```
 SSC_count = ceil(volume / 21)
 ```
 
-The divisor is **21**, not 20 (a common community assumption that was wrong). Validated across 52 ships.
+Validated: across 52 blueprints.
 
 ---
 
 ## Hull Plates
 
-The number of hull plates is determined by a surface area approximation. The formula is the same regardless of which plate type is selected — the type only determines the material ticker in the BOM.
+The number of hull plates is determined by a surface area approximation. The formula is the same regardless of which plate type is selected.
 
 ```
 plate_count = ceil(volume^(2/3) / 2.07)
 ```
 
-The divisor is **2.07**, not 2.06 or 2.0. Validated across 52 ships with all five plate types.
+The divisor is **2.07** - Validated across 52 ships with all five plate types.
 
 ---
 
@@ -147,7 +147,7 @@ Each equipped shield type requires the same number of units as the hull plate co
 shield_count_per_type = plate_count
 ```
 
-Only shields the player has selected are included in the BOM. A ship with Heat Shielding and Radiation Shielding equipped gets `plate_count` units of each. A ship with no shields gets none.
+A ship with Heat Shielding and Radiation Shielding equipped gets `plate_count` units of each. A ship with no shields gets none.
 
 ---
 
@@ -162,7 +162,7 @@ Crew quarters are auto-assigned based on total ship volume. Not player-selectabl
 | < 2750 | Medium | CQM |
 | ≥ 2750 | Large | CQL |
 
-The thresholds are **1000, 1750, 2750**. These were determined by building 17 purpose-built test blueprints that systematically varied volume across the full range, with and without FTL modules. The thresholds are universal — they do not differ between STL-only and FTL-capable ships.
+The thresholds are **1000, 1750, 2750**. These were determined by building 17 purpose-built test blueprints that systematically varied volume across the full range, with and without FTL modules. The thresholds are universal — they do not appear to differ between STL-only and FTL-capable ships.
 
 ### Validation Data
 
@@ -205,7 +205,7 @@ Auto-assigned based on FTL reactor type. Not player-selectable.
 | High-power (HPR) | MK2 | BR2 |
 | Hyper-power (HYR) | MK2 | BR2 |
 
-Validated across 52 ships.
+Validated: across 52 blueprints.
 
 ---
 
@@ -219,7 +219,7 @@ FFC = 1 if FTL reactor equipped, else 0
 
 ## FTL Emitters — Diminishing-Multiplier Algorithm
 
-FTL ships need field emitters to create the FTL field around the ship. Larger ships need more emitters, but the algorithm isn't simple division — it uses a diminishing multiplier that makes the residual coverage cheaper as the ship gets larger.
+FTL ships need field emitters. Larger ships need more emitters, but the algorithm isn't simple division — it uses a diminishing multiplier that makes the residual coverage cheaper as the ship gets larger.
 
 Only calculated when an FTL reactor is equipped.
 
@@ -260,7 +260,7 @@ Return { LFE, MFE, SFE }
 
 The key insight is in Step 3. The remainder volume is multiplied by `20 / (10 + LFE)`. As the ship gets larger and gains more large emitters, this fraction gets smaller, meaning the residual volume needs proportionally fewer medium and small emitters to cover. This prevents emitter counts from scaling linearly with volume.
 
-### Worked Examples
+### Examples
 
 **Volume = 963 m³** (reference ship)
 1. LFE = floor(963 / 1000) = 0
@@ -289,7 +289,7 @@ The key insight is in Step 3. The remainder volume is multiplied by `20 / (10 + 
 6. SFE = ceil(417.33 / 250) = 2
 7. **Result: 5 LFE, 1 MFE, 2 SFE**
 
-Validated across 47 FTL ships.
+Validated: across 47 FTL blueprints.
 
 ---
 
@@ -307,7 +307,7 @@ Ship mass is the exact sum of `bomWeight × quantity` for every component in the
 - Emitters: LFE/MFE/SFE counts (if FTL)
 - Optional equipment (drones, high-G seats): 1 unit each
 
-Per-module BOM weights are available from the game's data files. This formula produces exact mass values — validated with zero error across 24 in-game blueprints.
+This formula produces exact mass values — validated across 24 in-game blueprints.
 
 ---
 
@@ -317,7 +317,7 @@ Per-module BOM weights are available from the game's data files. This formula pr
 build_time_hours = mass / 50
 ```
 
-The in-game display rounds to the nearest hour with a `~` prefix.
+The in-game display rounds to the nearest hour.
 
 ---
 
@@ -347,14 +347,14 @@ The full Bill of Materials for a ship blueprint is assembled by combining:
 ## Sources
 
 - **PrUn Handbook:** [Shipbuilding tutorial](https://handbook.apex.prosperousuniverse.com/tutorials/legacy-tutorials/shipbuilding/index.html) — module descriptions, slot layout, and auto-component explanations.
-- **PCT (PrUn Community Derived Information):** [Ship Blueprints](https://pct.fnar.net/ship-blueprints/index.html) — community-maintained wiki with prior work on component volumes, SSC formula, build time, and emitter constants.
+- **PCT (PrUn Community Derived Information):** [Ship Blueprints](https://pct.fnar.net/ship-blueprints/index.html) — community-maintained wiki with prior work on component volumes, SSC formula, build time and emitter constants.
 - **Module data:** Wire-captured from PrUn WebSocket traffic via APEX_/PrUn-Link (Feb 2026)
 - **Volume delta model:** Derived from 29 isolation blueprints, validated against 23 player blueprints (Feb 2026)
 - **Auto-computed formulas:** Derived from 52 regular ship blueprints via systematic pattern analysis (Feb 2026)
-- **CQ thresholds:** Validated via 17 purpose-built test blueprints with binary search methodology (Mar 2026). Original bug identified by **Shrewdsun** — reported that an LCB STL freighter with a Large STL Fuel Tank was assigned CQL in-game but CQM in DryDock, which led to the discovery that all three CQ boundaries were incorrect.
+- **CQ thresholds:** Validated via 17 purpose-built test blueprints with binary search methodology (Mar 2026). Bug identified by **Shrewdsun** — reported that an LCB STL freighter with a Large STL Fuel Tank was assigned CQL in-game but CQM in DryDock, which led to the discovery that all three CQ boundaries were incorrect.
 - **Emitter algorithm structure:** Original description from **molp** ([PrUn Community Forum, Oct 2022](https://com.prosperousuniverse.com/t/minor-issues-and-ship-emitter-count-questions/5196)); constants and diminishing-multiplier behaviour reverse-engineered (Feb 2026)
 - **Shield/plate count parity:** **RNGzero**'s Ship Repair Calc spreadsheet, confirmed via WebSocket data
 
 ---
 
-*Built by [27bit.dev](https://27bit.dev) for the Prosperous Universe community.*
+*Built by [27bit.dev](https://27bit.dev), assisted by [Claude](https://claude.ai) for the Prosperous Universe community.*
