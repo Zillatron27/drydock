@@ -1,17 +1,23 @@
 # Changelog
 
-## 1.3.0 — Cherry-Pick Exchange Filter (2026-03-22)
+## 1.4.0 — Cherry-Pick Filter, Discord Embeds, CQ Fix (2026-03-23)
 
 ### Features
-- Exchange badges in the cherry-pick pane are now clickable toggles — click to exclude an exchange from cherry-pick sourcing
+- Cherry-pick exchange filter — exchange badges in the cherry-pick pane are now clickable toggles to exclude exchanges from sourcing
 - Disabled exchanges appear visually muted; cherry-pick total, sourcing, status, and ACT generation recalculate live
 - At least one exchange must remain enabled (last badge won't toggle off)
 - Filter persists to localStorage as a user preference across sessions and blueprints
+- Discord embed previews — sharing a permalink in Discord now shows ship name, module tickers, and amber accent bar via Open Graph meta tags
+
+### Bug Fixes
+- Fix crew quarters volume thresholds: corrected to 1000/1750/2750 (was 834/2533/3587), validated against 17 in-game blueprints
+- Ships with volume 2750–3587 now correctly assign CQL instead of CQM
 
 ### Technical
+- Server-side Umami analytics via Cloudflare Worker (no client-side scripts or cookies)
+- Worker injects OG meta tags for `?bp=` permalink requests
 - `cherryPickPricing()` and `depthCherryPickPricing()` accept optional `enabledExchanges` filter parameter
-- `ExchangeFilter` type added; `DryDockSettings` extended with `cherryPickExchanges`
-- New test suite for cherry-pick filter behaviour (both pricing modes)
+- Strengthened formula tests with exact mass verification and CQ regression case
 
 ## 1.2.0 — Pricing Modes: Full Depth (2026-03-04)
 
