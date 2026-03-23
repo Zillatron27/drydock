@@ -2,11 +2,11 @@
 
 **Last Updated:** 2026-03-23
 **DryDock Version:** 1.4.0
-**Validation:** 52 ship blueprints + 17 for volume validation
+**Validation:** 52 ship blueprints + 17 additional for volume validation
 
 This document describes how Prosperous Universe calculates ship stats from a blueprint's module selections. These formulas were reverse-engineered by building isolation blueprints in-game, varying one module at a time and recording the results. Formula's have been validated against the in-game data but may still contain errors. 
 
-This is model used by [DryDock](https://drydock.cc).
+This model is used by [DryDock](https://drydock.cc).
 
 ---
 
