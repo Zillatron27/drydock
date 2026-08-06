@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1 — Starter Ship Preset (2026-08-06)
+
+### Features
+- New "Starter Ship" example blueprint — the stock ship every new player begins with (ENG/SSL/RCT/SFL/SCB/BHP), first in the Examples list
+
 ## 1.5.0 — Exact Ship Formulas (2026-08-06)
 
 Every derived-component formula now matches the game exactly, verified by a
