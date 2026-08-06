@@ -1,8 +1,8 @@
 # Ship Blueprint Formulas — Reference Guide
 
-**Last Updated:** 2026-03-23
-**DryDock Version:** 1.4.0
-**Validation:** 52 ship blueprints + 17 additional for volume validation
+**Last Updated:** 2026-08-06
+**DryDock Version:** 1.5.0
+**Validation:** 24-blueprint in-game survey (Aug 2026, `src/formulas/__tests__/ingame_ships.test.ts`) + 52 ship blueprints + 17 additional for volume validation + 561-combination PUNoted test table (`src/formulas/__tests__/punoted_lookup.test.ts`)
 
 This document describes how Prosperous Universe calculates ship stats from a blueprint's module selections. These formulas were reverse-engineered by building isolation blueprints in-game, varying one module at a time and recording the results. Formula's have been validated against the in-game data but may still contain errors. 
 
@@ -15,6 +15,10 @@ This model is used by [DryDock](https://drydock.cc).
 Most auto-calculated values derive from the ship's Volume. However, this can't be calculated by simply adding up per-module volumes. Each module's contribution depends on the full ship configuration because auto-computed components (structure, hull plates, shields, emitters) cascade from total volume.
 
 Instead, volume is calculated using a **delta model**: starting from a known reference ship, then applying per-slot deltas when modules differ from the reference.
+
+**Internal volumes are fractional; the display floors.** Several module volumes are half-integers, so the internal total can end in .5. The BLU screen shows `floor(total)`, and all downstream values (SSC, hull plates, crew quarters) are computed from the **floored** integer — proven by the HTE STL-only ship: internal 1050.5, displayed 1050, and in-game SSC is 50 = ceil(1050/21), not ceil(1050.5/21) = 51.
+
+This also explains a systematic error in the March 2026 data: rows whose internal volume ended in .5 (701, 1359, 1485, 1488, 1614, 543, 1769, 3588, 5688) were recorded **rounded up** — they came off the wire as fractional values and were rounded at documentation time, while the in-game display floors. The internal values were correct; the recorded integers were 1 high.
 
 ### Reference Ship
 
@@ -33,6 +37,8 @@ Instead, volume is calculated using a **delta model**: starting from a known ref
 
 For each slot, the delta is the volume difference when swapping from the reference module to the selected module.
 
+Every delta below was pinned by a dedicated in-game blueprint in the August 2026 survey (each fractional module paired with a known half-integer "carrier" like AEN or HPR so the floor makes the fraction observable).
+
 **STL Engine**
 
 | Module | Ticker | Delta |
@@ -40,8 +46,8 @@ For each slot, the delta is the volume difference when swapping from the referen
 | Standard | ENG | 0 |
 | Fuel-saving | FSE | −1 |
 | Glass | GEN | −1 |
-| Advanced | AEN | +3 |
-| Hyperthrust | HTE | +7 |
+| Advanced | AEN | +3.5 |
+| Hyperthrust | HTE | +6.5 |
 
 **STL Fuel Tank**
 
@@ -57,8 +63,8 @@ For each slot, the delta is the volume difference when swapping from the referen
 |--------|--------|-------|
 | Standard | RCT | 0 |
 | Quick-charge | QCR | +7 |
-| High-power | HPR | +117 |
-| Hyper-power | HYR | +127 |
+| High-power | HPR | +117.5 |
+| Hyper-power | HYR | +127.5 |
 
 **FTL Fuel Tank**
 
@@ -66,26 +72,28 @@ For each slot, the delta is the volume difference when swapping from the referen
 |--------|--------|-------|
 | Small | SFL | 0 |
 | Medium | MFL | +6 |
-| Large | LFL | +18 |
+| Large | LFL | +17.5 |
 
 **Cargo Bay**
 
 | Module | Ticker | Delta |
 |--------|--------|-------|
-| Tiny | TCB | −420 |
-| Very Small | VSC | −262 |
+| Tiny | TCB | −420.5 |
+| Very Small | VSC | −263 |
 | Small | SCB | 0 |
-| Medium | MCB | +525 |
+| Medium | MCB | +524.5 |
 | Large | LCB | +1575 |
-| High-Load | WCB | +525 |
-| High-Volume | VCB | +2625 |
-| Huge | HCB | +4725 |
+| High-Load | WCB | +524.5 |
+| High-Volume | VCB | +2624.5 |
+| Huge | HCB | +4724.5 |
 
 **Hull Plates, Shields, Drones, High-G Seats:** All have **zero volume delta**. These modules affect mass only.
 
 ### STL-Only Ships
 
-When both FTL Reactor and FTL Fuel Tank modles aren't fitted (no FTL capability), apply an additional **−129** volume delta. This removes the reference ship's FTL contribution from the total.
+When both FTL Reactor and FTL Fuel Tank modules aren't fitted (no FTL capability), apply an additional **−129** volume delta. This removes the reference ship's FTL contribution from the total, including swapping the reference BR1 bridge for the smaller BRS.
+
+**Bridge feedback:** the bridge is itself a volume-bearing component (BRS 64, BR1 100, BR2 274), so the bridge rule feeds back into total volume. The −129 delta assumes a BRS bridge — the usual case for STL-only ships. When the ship's engine forces a BR2 bridge instead (AEN/HTE, see Command Bridge below), add the BR2−BRS difference of **+210**. This coupling is why issue #7's ships were wrong about volume, crew quarters, and plates simultaneously.
 
 ### Calculating Total Volume
 
@@ -94,7 +102,13 @@ total_volume = 963 + sum(all applicable deltas)
 
 If no FTL reactor and no FTL fuel tank:
     total_volume += (−129)
+    If bridge is BR2 (AEN/HTE engine):
+        total_volume += 210
+
+displayed_volume = floor(total_volume)
 ```
+
+All downstream formulas (SSC, plates, crew quarters, mass) consume `displayed_volume`.
 
 ### Example
 
@@ -157,12 +171,23 @@ Crew quarters are auto-assigned based on total ship volume. Not player-selectabl
 
 | Volume | Crew Quarters | Ticker |
 |--------|---------------|--------|
-| < 1000 | Tiny | CQT |
-| < 1750 | Small | CQS |
-| < 2750 | Medium | CQM |
-| ≥ 2750 | Large | CQL |
+| < 950 | Tiny | CQT |
+| < 1700 | Small | CQS |
+| < 2700 | Medium | CQM |
+| ≥ 2700 | Large | CQL |
 
-The thresholds are **1000, 1750, 2750**. These were determined by building 17 purpose-built test blueprints that systematically varied volume across the full range, with and without FTL modules. The thresholds are universal — they do not appear to differ between STL-only and FTL-capable ships.
+The thresholds are **945, 1700, 2700**, applied to the floored display volume. They are universal — they do not differ between STL-only and FTL-capable ships.
+
+**Boundary evidence (Aug 2026 in-game survey):**
+
+- **T1:** 943 → CQT and 947 → CQS observed in-game, so T1 ∈ {944…947}. No module combination produces a volume of 944–946, so any value in that set behaves identically; **945** is recorded as the likely dev value. The community-reported 950 (issue #6) was refuted by the 947 → CQS ship.
+- **T2 = 1700:** a 1731 m³ ship shows CQM in-game (would be CQS under the old 1750).
+- **T3 = 2700:** a 2748 m³ ship (AEN no-FTL, BR2 bridge feedback — the only reachable volume in the 2696–2780 dead band) shows CQL in-game (would be CQM under 2750).
+
+**History:** earlier versions used 1000/1750/2750, derived from 17 purpose-built test blueprints. Every blueprint in that set fits multiple threshold hypotheses *except* one recorded observation of the reference ship (963 → CQT) which turned out to be **wrong data** — community reports (issues #4/#5/#6), the PUNoted test table, and the reference ship's own wire-captured mass all show 963 → CQS. Supporting proofs:
+
+- The reference ship's wire-captured operating empty mass is **827.8 t**; its BOM only sums to 827.8 with CQS (25 t), not CQT (12.5 t).
+- PUNoted's 561-combination test table has 0 mismatches against these thresholds and 108 against 1000/1750/2750.
 
 ### Validation Data
 
@@ -171,11 +196,13 @@ The thresholds are **1000, 1750, 2750**. These were determined by building 17 pu
 | 543 | CQT | TCB, FTL |
 | 701 | CQT | VSC, FTL |
 | 834 | CQT | SCB, no FTL |
-| 963 | CQT | Reference (SCB, FTL) |
+| 952 | CQS | smallest CQS case in the PUNoted table |
+| 963 | CQS | Reference (SCB, FTL) — issue #5's "starter ship"; earlier CQT observation here was wrong data |
 | 1089 | CQS | SCB + MSL, FTL |
 | 1359 | CQS | MCB, no FTL |
 | 1488 | CQS | MCB, FTL |
 | 1614 | CQS | MCB + MSL, FTL |
+| 1633 | CQS | largest CQS case in the PUNoted table |
 | 1769 | CQM | MCB + LSL, no FTL |
 | 1898 | CQM | MCB + LSL, FTL |
 | 2409 | CQM | LCB, no FTL |
@@ -189,23 +216,28 @@ The thresholds are **1000, 1750, 2750**. These were determined by building 17 pu
 | 3588 | CQL | VCB, FTL |
 | 5688 | CQL | HCB, FTL |
 
-Every data point fits thresholds of 1000/1750/2750. The tightest brackets are 963/1089 around 1000, 1614/1769 around 1750, and 2695/2780 around 2750. Exact threshold values cannot be tested because the module system produces discrete volumes — there is no module combination that produces a volume of exactly 1000, 1750, or 2750.
+March 2026 rows above whose internal volume ends in .5 (701, 1359, 1488, 1614, 1769, 3588, 5688) are recorded 1 high — see the rounding note under Volume. Their CQ observations remain valid. The definitive boundary ships (943, 947, 949, 1731, 2748) live in `src/formulas/__tests__/ingame_ships.test.ts` together with the full 24-blueprint August 2026 survey.
 
 ---
 
 ## Command Bridge
 
-Auto-assigned based on FTL reactor type. Not player-selectable.
+Auto-assigned. Not player-selectable.
 
-| FTL Reactor | Bridge | Ticker |
-|-------------|--------|--------|
-| None | Short-distance | BRS |
-| Standard (RCT) | MK1 | BR1 |
-| Quick-charge (QCR) | MK1 | BR1 |
-| High-power (HPR) | MK2 | BR2 |
-| Hyper-power (HYR) | MK2 | BR2 |
+A ship is **FTL-capable** only when both an FTL reactor *and* an FTL fuel tank are fitted. FTL-capable ships get their bridge from the reactor type; all other ships get BRS, except the two largest STL engines which force a BR2 (issue #7, community rule from SLKLS, confirmed in-game by raylu):
 
-Validated: across 52 blueprints.
+| Configuration | Bridge | Ticker |
+|---------------|--------|--------|
+| FTL: Standard (RCT) or Quick-charge (QCR) reactor | MK1 | BR1 |
+| FTL: High-power (HPR) or Hyper-power (HYR) reactor | MK2 | BR2 |
+| Non-FTL: Advanced (AEN) or Hyperthrust (HTE) engine | MK2 | BR2 |
+| Non-FTL: any other engine | Short-distance | BRS |
+
+The bridge contributes to total volume (see "Bridge feedback" under Volume): a non-FTL ship with an AEN/HTE engine is **+210 m³** larger than the plain delta model predicts, which cascades into crew quarters, hull plates, and SSC.
+
+**BRP note:** PUNoted's formulas replace the bridge ticker with "BRP" when a basic radiation shield is equipped. Their own test data contradicts this — the "BRP" ships have identical volume and build time to their BR1/BR2 twins, and the mass delta is exactly the shield-plate weight difference, so the physical bridge is unchanged (BRP is the basic radiation shield plate's ticker). DryDock does not model a BRP bridge.
+
+Validated: across 52 blueprints (FTL rule) + community rule and in-game blueprint for the STL branch.
 
 ---
 
