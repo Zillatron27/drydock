@@ -69,7 +69,7 @@ export default function BlueprintEditor({ existingBlueprint, onSave, onCancel }:
   const ssc = useMemo(() => calculateSSC(volume), [volume]);
   const plates = useMemo(() => calculatePlates(volume), [volume]);
   const emitters = useMemo(() => calculateEmitters(volume), [volume]);
-  const bridge = useMemo(() => getBridge(selections.ftlReactor), [selections.ftlReactor]);
+  const bridge = useMemo(() => getBridge(selections), [selections]);
   const crew = useMemo(() => getCrewQuarters(volume), [volume]);
   const hasFTL = selections.ftlReactor !== null;
 

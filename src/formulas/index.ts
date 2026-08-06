@@ -7,10 +7,18 @@ import {
   NO_FTL_DELTA,
   CQ_THRESHOLDS,
   BRIDGE_MAP,
+  STL_BR2_ENGINE_OPTIONS,
+  STL_BR2_VOLUME_DELTA,
   EMITTER_CONSTANTS,
 } from '../data/moduleStats';
 
-/** Total ship volume via delta model (validated against 23 in-game blueprints) */
+/**
+ * Total ship volume via delta model. Module volumes are fractional
+ * (half-integers) internally; the game floors the sum for display and feeds
+ * the floored value to everything downstream — proven in-game by the HTE
+ * STL ship (internal 1050.5, displayed 1050, SSC 50 = ceil(1050/21), not 51).
+ * Validated against 24 in-game blueprints (Aug 2026 survey).
+ */
 export function calculateVolume(selections: ModuleSelections): number {
   let volume = VOLUME_REFERENCE.totalVolume;
 
@@ -37,12 +45,17 @@ export function calculateVolume(selections: ModuleSelections): number {
     if (delta) volume += delta.volumeDelta;
   }
 
-  // STL-only ships: subtract reference FTL contribution
+  // STL-only ships: subtract reference FTL contribution (assumes BRS bridge)
   if (!selections.ftlReactor && !selections.ftlFuelTank) {
     volume += NO_FTL_DELTA.volumeDelta;
+    // AEN/HTE engines force a BR2 bridge, which is bigger than the BRS
+    // that NO_FTL_DELTA assumes
+    if (getBridge(selections) === 'BR2') {
+      volume += STL_BR2_VOLUME_DELTA;
+    }
   }
 
-  return volume;
+  return Math.floor(volume);
 }
 
 /** Ship Structure Components: ceil(volume / 21) */
@@ -77,12 +90,22 @@ export function calculateEmitters(volume: number): EmitterCounts {
   return { small, medium, large };
 }
 
-/** Bridge type depends on FTL reactor type */
-export function getBridge(ftlReactor: string | null): string {
-  if (!ftlReactor) return 'BRS';
-  const stats = moduleStats[ftlReactor];
-  if (!stats) return 'BRS';
-  return BRIDGE_MAP[stats.option] ?? 'BRS';
+/**
+ * Bridge type. FTL-capable ships (reactor AND FTL fuel tank) get BR1/BR2 by
+ * reactor type; ships without a working FTL drive get BRS, except AEN/HTE
+ * engines which require BR2 (issue #7).
+ */
+export function getBridge(selections: ModuleSelections): string {
+  const { ftlReactor, ftlFuelTank, stlEngine } = selections;
+
+  if (ftlReactor && ftlFuelTank) {
+    const stats = moduleStats[ftlReactor];
+    if (stats) return BRIDGE_MAP[stats.option] ?? 'BRS';
+  }
+
+  const engine = moduleStats[stlEngine];
+  if (engine && STL_BR2_ENGINE_OPTIONS.includes(engine.option)) return 'BR2';
+  return 'BRS';
 }
 
 /** Crew quarters depend on volume thresholds (validated 52/52 ships, refined with 17 in-game blueprints) */
@@ -129,7 +152,7 @@ export function calculateMass(selections: ModuleSelections, volume: number): num
 
   // Auto-computed components
   addWeight('SSC', calculateSSC(volume));
-  addWeight(getBridge(selections.ftlReactor), 1);
+  addWeight(getBridge(selections), 1);
   addWeight(getCrewQuarters(volume), 1);
 
   if (selections.ftlReactor) {
@@ -196,7 +219,7 @@ export function calculateBOM(selections: ModuleSelections): BOMEntry[] {
   }
 
   // Auto-calculated: bridge and crew quarters
-  add(getBridge(selections.ftlReactor), 1);
+  add(getBridge(selections), 1);
   add(getCrewQuarters(volume), 1);
 
   return entries;

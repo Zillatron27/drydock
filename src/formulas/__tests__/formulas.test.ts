@@ -12,6 +12,25 @@ import {
 } from '../index';
 import type { ModuleSelections } from '../../types';
 
+/** Minimal STL-only ship; override slots per test case */
+function makeSelections(overrides: Partial<ModuleSelections> = {}): ModuleSelections {
+  return {
+    stlEngine: 'ENG',
+    stlFuelTank: 'SSL',
+    cargoBay: 'SCB',
+    ftlReactor: null,
+    ftlFuelTank: null,
+    hullPlates: 'BHP',
+    heatShielding: null,
+    whippleShielding: null,
+    stabilitySystem: null,
+    radiationShielding: null,
+    selfRepairDrones: null,
+    highGSeats: null,
+    ...overrides,
+  };
+}
+
 // -- Verified ship volumes and SSC counts --
 // Source: in-game screenshots, validated ceil(V/21) across 13 ships
 const sscCases: Array<[string, number, number]> = [
@@ -116,59 +135,70 @@ describe('calculateEmitters', () => {
 });
 
 describe('getBridge', () => {
-  it('returns BRS for no FTL', () => {
-    expect(getBridge(null)).toBe('BRS');
+  it('returns BRS for STL-only ships with small engines', () => {
+    expect(getBridge(makeSelections({ stlEngine: 'ENG' }))).toBe('BRS');
+    expect(getBridge(makeSelections({ stlEngine: 'FSE' }))).toBe('BRS');
+    expect(getBridge(makeSelections({ stlEngine: 'GEN' }))).toBe('BRS');
   });
 
-  it('returns BR1 for RCT', () => {
-    expect(getBridge('RCT')).toBe('BR1');
+  it('returns BR2 for STL-only ships with AEN/HTE engines (issue #7)', () => {
+    expect(getBridge(makeSelections({ stlEngine: 'AEN' }))).toBe('BR2');
+    expect(getBridge(makeSelections({ stlEngine: 'HTE' }))).toBe('BR2');
   });
 
-  it('returns BR1 for QCR', () => {
-    expect(getBridge('QCR')).toBe('BR1');
+  it('returns BR1 for RCT/QCR with an FTL fuel tank', () => {
+    expect(getBridge(makeSelections({ ftlReactor: 'RCT', ftlFuelTank: 'SFL' }))).toBe('BR1');
+    expect(getBridge(makeSelections({ ftlReactor: 'QCR', ftlFuelTank: 'SFL' }))).toBe('BR1');
   });
 
-  it('returns BR2 for HPR', () => {
-    expect(getBridge('HPR')).toBe('BR2');
+  it('returns BR2 for HPR/HYR with an FTL fuel tank', () => {
+    expect(getBridge(makeSelections({ ftlReactor: 'HPR', ftlFuelTank: 'SFL' }))).toBe('BR2');
+    expect(getBridge(makeSelections({ ftlReactor: 'HYR', ftlFuelTank: 'SFL' }))).toBe('BR2');
   });
 
-  it('returns BR2 for HYR', () => {
-    expect(getBridge('HYR')).toBe('BR2');
+  it('treats a reactor without an FTL fuel tank as non-FTL', () => {
+    expect(getBridge(makeSelections({ ftlReactor: 'RCT' }))).toBe('BRS');
+    expect(getBridge(makeSelections({ ftlReactor: 'RCT', stlEngine: 'AEN' }))).toBe('BR2');
+  });
+
+  it('FTL rule wins over the engine rule when both apply', () => {
+    expect(getBridge(makeSelections({ stlEngine: 'AEN', ftlReactor: 'RCT', ftlFuelTank: 'SFL' }))).toBe('BR1');
   });
 });
 
 describe('getCrewQuarters', () => {
-  it('returns CQT for volume <= 999', () => {
+  it('returns CQT for volume <= 944', () => {
     expect(getCrewQuarters(834)).toBe('CQT');
     expect(getCrewQuarters(500)).toBe('CQT');
-    expect(getCrewQuarters(999)).toBe('CQT');
+    expect(getCrewQuarters(944)).toBe('CQT');
   });
 
-  it('returns CQS for 1000 <= volume <= 1749', () => {
-    expect(getCrewQuarters(1000)).toBe('CQS');
+  it('returns CQS for 945 <= volume <= 1699', () => {
+    expect(getCrewQuarters(945)).toBe('CQS');
+    expect(getCrewQuarters(963)).toBe('CQS');   // starter ship — issue #5
     expect(getCrewQuarters(1485)).toBe('CQS');
     expect(getCrewQuarters(1611)).toBe('CQS');
   });
 
-  it('returns CQM for 1750 <= volume <= 2749', () => {
-    expect(getCrewQuarters(1750)).toBe('CQM');
+  it('returns CQM for 1700 <= volume <= 2699', () => {
+    expect(getCrewQuarters(1700)).toBe('CQM');
     expect(getCrewQuarters(2535)).toBe('CQM');
-    expect(getCrewQuarters(2749)).toBe('CQM');
+    expect(getCrewQuarters(2699)).toBe('CQM');
   });
 
-  it('returns CQL for volume >= 2750', () => {
-    expect(getCrewQuarters(2750)).toBe('CQL');
+  it('returns CQL for volume >= 2700', () => {
+    expect(getCrewQuarters(2700)).toBe('CQL');
     expect(getCrewQuarters(2819)).toBe('CQL');
     expect(getCrewQuarters(5838)).toBe('CQL');
   });
 
   it('handles exact boundaries', () => {
-    expect(getCrewQuarters(999)).toBe('CQT');
-    expect(getCrewQuarters(1000)).toBe('CQS');
-    expect(getCrewQuarters(1749)).toBe('CQS');
-    expect(getCrewQuarters(1750)).toBe('CQM');
-    expect(getCrewQuarters(2749)).toBe('CQM');
-    expect(getCrewQuarters(2750)).toBe('CQL');
+    expect(getCrewQuarters(944)).toBe('CQT');
+    expect(getCrewQuarters(945)).toBe('CQS');
+    expect(getCrewQuarters(1699)).toBe('CQS');
+    expect(getCrewQuarters(1700)).toBe('CQM');
+    expect(getCrewQuarters(2699)).toBe('CQM');
+    expect(getCrewQuarters(2700)).toBe('CQL');
   });
 });
 
@@ -207,8 +237,8 @@ describe('calculateVolume', () => {
       selfRepairDrones: null,
       highGSeats: null,
     };
-    // delta: 963 + 0 + 126 + 525 + 0 + 0 = 1614
-    expect(calculateVolume(selections)).toBe(1614);
+    // delta: floor(963 + 0 + 126 + 524.5 + 0 + 0) = floor(1613.5) = 1613
+    expect(calculateVolume(selections)).toBe(1613);
   });
 
   it('includes FTL fuel tank volume', () => {
@@ -251,9 +281,9 @@ describe('calculateVolume', () => {
       highGSeats: 'AGS',
       stabilitySystem: 'STS',
     };
-    // delta: 963 + 0 + 126 + 4725 + 7 + 0 = 5821
+    // delta: floor(963 + 0 + 126 + 4724.5 + 7 + 0) = floor(5820.5) = 5820
     // Optional equipment deltas are all 0
-    expect(calculateVolume(base)).toBe(5821);
+    expect(calculateVolume(base)).toBe(5820);
     expect(calculateVolume(base)).toBe(calculateVolume(withOptional));
   });
 });
@@ -300,7 +330,7 @@ describe('calculateBOM', () => {
       stlFuelTank: 'MSL',
       cargoBay: 'HCB',
       ftlReactor: 'QCR',
-      ftlFuelTank: null,
+      ftlFuelTank: 'SFL',
       hullPlates: 'LHP',
       heatShielding: null,
       whippleShielding: 'AWH',
@@ -313,15 +343,47 @@ describe('calculateBOM', () => {
     const bom = calculateBOM(selections);
     const byTicker = Object.fromEntries(bom.map(e => [e.ticker, e.quantity]));
 
-    // delta: 963 + 0 + 126 + 4725 + 0 + 7 = 5821
-    const vol = 5821;
+    // delta: floor(963 + 0 + 126 + 4724.5 + 7 + 0 + 0) = 5820
+    const vol = 5820;
     const plates = calculatePlates(vol);
     expect(byTicker['LHP']).toBe(plates);
     expect(byTicker['AWH']).toBe(plates);   // shield count = plate count
     expect(byTicker['SSC']).toBe(calculateSSC(vol));
     expect(byTicker['FFC']).toBe(1);
-    expect(byTicker['BR1']).toBe(1);   // QCR → BR1
-    expect(byTicker['CQL']).toBe(1);   // vol=5821 >= 2750 → CQL
+    expect(byTicker['BR1']).toBe(1);   // QCR + tank → BR1
+    expect(byTicker['CQL']).toBe(1);   // vol=5821 >= 2700 → CQL
+  });
+
+  it('gives STL-only AEN ship a BR2 bridge and the larger volume (issue #7)', () => {
+    // AEN+SSL+SCB+BHP: 963 + 3 - 129 (no FTL, assumes BRS) + 210 (BRS→BR2) = 1047
+    const selections = makeSelections({ stlEngine: 'AEN' });
+    const volume = calculateVolume(selections);
+    expect(volume).toBe(1047);
+
+    const bom = calculateBOM(selections);
+    const byTicker = Object.fromEntries(bom.map(e => [e.ticker, e.quantity]));
+    expect(byTicker['BR2']).toBe(1);
+    expect(byTicker['BRS']).toBeUndefined();
+    expect(byTicker['CQS']).toBe(1);    // vol=1047 >= 950 → CQS
+    // Plates and SSC follow the corrected volume
+    expect(byTicker['BHP']).toBe(calculatePlates(1047));
+    expect(byTicker['SSC']).toBe(calculateSSC(1047));
+  });
+
+  it('gives STL-only HTE ship a BR2 bridge and the larger volume', () => {
+    // HTE+SSL+SCB+BHP: floor(963 + 6.5 - 129 + 210) = floor(1050.5) = 1050
+    const selections = makeSelections({ stlEngine: 'HTE' });
+    expect(calculateVolume(selections)).toBe(1050);
+    const byTicker = Object.fromEntries(calculateBOM(selections).map(e => [e.ticker, e.quantity]));
+    expect(byTicker['BR2']).toBe(1);
+  });
+
+  it('does not apply the BR2 volume delta to GEN STL ships', () => {
+    // GEN+SSL+SCB+BHP: 963 - 1 - 129 = 833, bridge stays BRS
+    const selections = makeSelections({ stlEngine: 'GEN' });
+    expect(calculateVolume(selections)).toBe(833);
+    const byTicker = Object.fromEntries(calculateBOM(selections).map(e => [e.ticker, e.quantity]));
+    expect(byTicker['BRS']).toBe(1);
   });
 
   it('includes optional equipment as 1 unit', () => {
@@ -366,8 +428,8 @@ describe('calculateBOM', () => {
 
     const bom = calculateBOM(selections);
     const byTicker = Object.fromEntries(bom.map(e => [e.ticker, e.quantity]));
-    // delta: 963 + 0 + 126 + 525 + 0 + (-129) = 1485
-    const plates = calculatePlates(1485);
+    // delta: floor(963 + 0 + 126 + 524.5 + 0 + (-129)) = floor(1484.5) = 1484
+    const plates = calculatePlates(1484);
 
     expect(byTicker['BHP']).toBe(plates);
     expect(byTicker['APT']).toBe(plates);
@@ -431,61 +493,37 @@ describe('calculateBOM', () => {
 
 describe('calculateMass', () => {
   it('computes exact mass for VOL-BASE reference ship', () => {
-    // ENG+SSL+RCT+SFL+SCB+BHP → vol=963
+    // ENG+SSL+RCT+SFL+SCB+BHP → vol=963 — this is the "starter ship" from
+    // issue #5. Its wire-captured operating empty mass is 827.8, which only
+    // sums correctly with CQS (25), not CQT (12.5):
     // Manual sum: ENG(8) + SSL(20) + RCT(7) + SFL(9) + SCB(50) + BHP(9×48)
-    //   + SSC(1×46) + BR1(180) + CQT(12.5) + FFC(50) + MFE(0.2×3) + SFE(0.1×2)
-    //   = 8 + 20 + 7 + 9 + 50 + 432 + 46 + 180 + 12.5 + 50 + 0.6 + 0.2 = 815.3
-    const selections: ModuleSelections = {
-      stlEngine: 'ENG',
-      stlFuelTank: 'SSL',
-      cargoBay: 'SCB',
-      ftlReactor: 'RCT',
-      ftlFuelTank: 'SFL',
-      hullPlates: 'BHP',
-      heatShielding: null,
-      whippleShielding: null,
-      stabilitySystem: null,
-      radiationShielding: null,
-      selfRepairDrones: null,
-      highGSeats: null,
-    };
+    //   + SSC(1×46) + BR1(180) + CQS(25) + FFC(50) + MFE(0.2×3) + SFE(0.1×2)
+    //   = 8 + 20 + 7 + 9 + 50 + 432 + 46 + 180 + 25 + 50 + 0.6 + 0.2 = 827.8
+    const selections = makeSelections({ ftlReactor: 'RCT', ftlFuelTank: 'SFL' });
     const volume = calculateVolume(selections);
     expect(volume).toBe(963);
     // Verify derived components
     expect(calculateSSC(volume)).toBe(46);
     expect(calculatePlates(volume)).toBe(48);
-    expect(getCrewQuarters(volume)).toBe('CQT');   // vol=963 < 1000
-    expect(getBridge('RCT')).toBe('BR1');
+    expect(getCrewQuarters(volume)).toBe('CQS');   // vol=963 >= 950
+    expect(getBridge(selections)).toBe('BR1');
     const emitters = calculateEmitters(volume);
     expect(emitters).toEqual({ large: 0, medium: 3, small: 2 });
-    expect(calculateMass(selections, volume)).toBeCloseTo(815.3, 1);
+    expect(calculateMass(selections, volume)).toBeCloseTo(827.8, 1);
   });
 
   it('computes exact mass for STL-only ship', () => {
     // ENG+SSL+SCB+BHP, vol=834, no FTL
     // Manual sum: ENG(8) + SSL(20) + SCB(50) + BHP(9×43) + SSC(1×40)
     //   + BRS(150) + CQT(12.5) = 8 + 20 + 50 + 387 + 40 + 150 + 12.5 = 667.5
-    const selections: ModuleSelections = {
-      stlEngine: 'ENG',
-      stlFuelTank: 'SSL',
-      cargoBay: 'SCB',
-      ftlReactor: null,
-      ftlFuelTank: null,
-      hullPlates: 'BHP',
-      heatShielding: null,
-      whippleShielding: null,
-      stabilitySystem: null,
-      radiationShielding: null,
-      selfRepairDrones: null,
-      highGSeats: null,
-    };
+    const selections = makeSelections();
     const volume = calculateVolume(selections);
     expect(volume).toBe(834);
     // Verify derived components used in mass calc
     expect(calculateSSC(volume)).toBe(40);
     expect(calculatePlates(volume)).toBe(43);
-    expect(getCrewQuarters(volume)).toBe('CQT');   // vol=834 < 1000
-    expect(getBridge(null)).toBe('BRS');
+    expect(getCrewQuarters(volume)).toBe('CQT');   // vol=834 < 950
+    expect(getBridge(selections)).toBe('BRS');
     expect(calculateMass(selections, volume)).toBeCloseTo(667.5, 1);
   });
 });

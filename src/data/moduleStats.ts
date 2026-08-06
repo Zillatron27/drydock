@@ -75,14 +75,17 @@ export const VOLUME_REFERENCE = {
 } as const;
 
 // Volume deltas: slotType -> option -> { volumeDelta, weightDelta }
-// Delta relative to the reference ship's selections per slot
+// Delta relative to the reference ship's selections per slot.
+// Several deltas are half-integers: the game's internal volumes are
+// fractional and the BLU display floors the total (see calculateVolume).
+// Values pinned by 24 in-game blueprints (Aug 2026 survey, issues #4-#7).
 export const VOLUME_DELTAS: Record<string, Record<string, { volumeDelta: number; weightDelta: number }>> = {
   STL_ENGINE: {
     STL_ENGINE_STANDARD: { volumeDelta: 0, weightDelta: 0 },
     STL_ENGINE_FUEL_SAVING: { volumeDelta: -1, weightDelta: -2 },
     STL_ENGINE_GLASS: { volumeDelta: -1, weightDelta: -3 },
-    STL_ENGINE_ADVANCED: { volumeDelta: 3, weightDelta: 6 },
-    STL_ENGINE_HYPERTHRUST: { volumeDelta: 7, weightDelta: 9 },
+    STL_ENGINE_ADVANCED: { volumeDelta: 3.5, weightDelta: 6 },
+    STL_ENGINE_HYPERTHRUST: { volumeDelta: 6.5, weightDelta: 9 },
   },
   STL_FUEL_TANK: {
     STL_FUEL_TANK_SMALL: { volumeDelta: 0, weightDelta: 0 },
@@ -92,23 +95,23 @@ export const VOLUME_DELTAS: Record<string, Record<string, { volumeDelta: number;
   FTL_REACTOR: {
     FTL_REACTOR_STANDARD: { volumeDelta: 0, weightDelta: 0 },
     FTL_REACTOR_QUICK_CHARGE: { volumeDelta: 7, weightDelta: 8 },
-    FTL_REACTOR_HIGH_POWER: { volumeDelta: 117, weightDelta: 141.7 },
-    FTL_REACTOR_HYPER_POWER: { volumeDelta: 127, weightDelta: 159.7 },
+    FTL_REACTOR_HIGH_POWER: { volumeDelta: 117.5, weightDelta: 141.7 },
+    FTL_REACTOR_HYPER_POWER: { volumeDelta: 127.5, weightDelta: 159.7 },
   },
   FTL_FUEL_TANK: {
     FTL_FUEL_TANK_SMALL: { volumeDelta: 0, weightDelta: 0 },
     FTL_FUEL_TANK_MEDIUM: { volumeDelta: 6, weightDelta: 16 },
-    FTL_FUEL_TANK_LARGE: { volumeDelta: 18, weightDelta: 52 },
+    FTL_FUEL_TANK_LARGE: { volumeDelta: 17.5, weightDelta: 52 },
   },
   CARGO_BAY: {
-    CARGO_BAY_TINY: { volumeDelta: -420, weightDelta: -197.8 },
-    CARGO_BAY_VERY_SMALL: { volumeDelta: -262, weightDelta: -120.7 },
+    CARGO_BAY_TINY: { volumeDelta: -420.5, weightDelta: -197.8 },
+    CARGO_BAY_VERY_SMALL: { volumeDelta: -263, weightDelta: -120.7 },
     CARGO_BAY_SMALL: { volumeDelta: 0, weightDelta: 0 },
-    CARGO_BAY_MEDIUM: { volumeDelta: 525, weightDelta: 219 },
+    CARGO_BAY_MEDIUM: { volumeDelta: 524.5, weightDelta: 219 },
     CARGO_BAY_LARGE: { volumeDelta: 1575, weightDelta: 628.4 },
-    CARGO_BAY_HIGH_LOAD: { volumeDelta: 525, weightDelta: 319 },
-    CARGO_BAY_HIGH_VOLUME: { volumeDelta: 2625, weightDelta: 919.8 },
-    CARGO_BAY_HUGE: { volumeDelta: 4725, weightDelta: 1689.6 },
+    CARGO_BAY_HIGH_LOAD: { volumeDelta: 524.5, weightDelta: 319 },
+    CARGO_BAY_HIGH_VOLUME: { volumeDelta: 2624.5, weightDelta: 919.8 },
+    CARGO_BAY_HUGE: { volumeDelta: 4724.5, weightDelta: 1689.6 },
   },
   HULL_TYPE: {
     HULL_PLATES_BASIC: { volumeDelta: 0, weightDelta: 0 },
@@ -149,21 +152,40 @@ export const NO_FTL_DELTA = {
   weightDelta: -160.3,
 } as const;
 
-// Crew quarters volume thresholds (validated 52/52 ships, refined with 17 in-game blueprints — thresholds at 1000/1750/2750)
+// Crew quarters volume thresholds at 945/1700/2700 (applied to the floored
+// display volume). T2 and T3 confirmed in-game (1731→CQM, 2748→CQL, Aug 2026).
+// T1 is bracketed in-game to (943, 947] — volumes 944-946 are unreachable by
+// any module combination, so any value in {944..947} behaves identically;
+// 945 chosen as the likely dev value. The community-reported 950 (issue #6)
+// was refuted by a 947-volume ship showing CQS in-game.
 export const CQ_THRESHOLDS: ReadonlyArray<{ maxVolume: number | null; ticker: string }> = [
-  { maxVolume: 999, ticker: 'CQT' },
-  { maxVolume: 1749, ticker: 'CQS' },
-  { maxVolume: 2749, ticker: 'CQM' },
+  { maxVolume: 944, ticker: 'CQT' },
+  { maxVolume: 1699, ticker: 'CQS' },
+  { maxVolume: 2699, ticker: 'CQM' },
   { maxVolume: null, ticker: 'CQL' },
 ];
 
-// Bridge determination by FTL reactor option (validated 52/52 ships)
+// Bridge determination (issue #7):
+// - FTL-capable (reactor AND FTL fuel tank equipped): map below by reactor.
+// - Otherwise: BRS, except AEN/HTE engines which require BR2 (rule confirmed
+//   by SLKLS on Discord and raylu's in-game blueprint).
 export const BRIDGE_MAP: Record<string, string> = {
   FTL_REACTOR_STANDARD: 'BR1',
   FTL_REACTOR_QUICK_CHARGE: 'BR1',
   FTL_REACTOR_HIGH_POWER: 'BR2',
   FTL_REACTOR_HYPER_POWER: 'BR2',
 };
+
+// STL engines whose non-FTL ships get a BR2 bridge instead of BRS
+export const STL_BR2_ENGINE_OPTIONS: readonly string[] = [
+  'STL_ENGINE_ADVANCED',
+  'STL_ENGINE_HYPERTHRUST',
+];
+
+// NO_FTL_DELTA bakes in a BRS bridge (the usual case for STL-only ships).
+// When the bridge is BR2 instead, the ship gains the BR2/BRS volume
+// difference: 274 - 64 = 210.
+export const STL_BR2_VOLUME_DELTA = 210;
 
 // FTL emitter algorithm constants
 export const EMITTER_CONSTANTS = {
