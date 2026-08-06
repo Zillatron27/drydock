@@ -34,8 +34,8 @@ const BASE_MODULES: Omit<ModuleSelections, 'cargoBay'> = {
 
 export const PRESET_BLUEPRINTS: PresetBlueprint[] = [
   {
-    name: 'Starter Ship',
-    description: 'The ship every new player starts with. Price a rebuild or an upgrade baseline.',
+    name: 'Starter Ship (BP-STRT-0000)',
+    description: 'The stock BLU every new player starts with. Price a rebuild or an upgrade baseline.',
     modules: {
       stlEngine: 'ENG',
       stlFuelTank: 'SSL',

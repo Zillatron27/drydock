@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.2 — Starter Ship BLU Name (2026-08-06)
+
+### Bug Fixes
+- Starter Ship preset now carries its in-game blueprint name (BP-STRT-0000) for recognition
+
 ## 1.5.1 — Starter Ship Preset (2026-08-06)
 
 ### Features
