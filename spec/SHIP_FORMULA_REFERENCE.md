@@ -1,7 +1,7 @@
 # Ship Blueprint Formulas — Reference Guide
 
 **Last Updated:** 2026-08-06
-**DryDock Version:** 1.5.0
+**DryDock Version:** 1.5.1
 **Validation:** 65 purpose-built in-game blueprints across two campaigns — 41 (Feb–Mar 2026: module isolation swaps + CQ threshold search; 17 appear in the CQ validation table below) and 24 (Aug 2026: fraction survey + boundary probes, `src/formulas/__tests__/ingame_ships.test.ts`) — plus 52 real ship configurations and the 561-combination PUNoted test table (`src/formulas/__tests__/punoted_lookup.test.ts`)
 
 This document describes how Prosperous Universe calculates ship stats from a blueprint's module selections. These formulas were reverse-engineered by building isolation blueprints in-game, varying one module at a time and recording the results. Formula's have been validated against the in-game data but may still contain errors. 
@@ -171,7 +171,7 @@ Crew quarters are auto-assigned based on total ship volume. Not player-selectabl
 
 | Volume | Crew Quarters | Ticker |
 |--------|---------------|--------|
-| < 950 | Tiny | CQT |
+| < 945 | Tiny | CQT |
 | < 1700 | Small | CQS |
 | < 2700 | Medium | CQM |
 | ≥ 2700 | Large | CQL |
@@ -384,6 +384,7 @@ The full Bill of Materials for a ship blueprint is assembled by combining:
 - **Volume delta model:** Derived from 29 isolation blueprints, validated against 23 player blueprints (Feb 2026)
 - **Auto-computed formulas:** Derived from 52 regular ship blueprints via systematic pattern analysis (Feb 2026)
 - **CQ thresholds:** Validated via 17 purpose-built test blueprints with binary search methodology (Mar 2026). Bug identified by **Shrewdsun** — reported that an LCB STL freighter with a Large STL Fuel Tank was assigned CQL in-game but CQM in DryDock, which led to the discovery that all three CQ boundaries were incorrect.
+- **Fractional volume model, bridge rule, final CQ thresholds:** 24-blueprint in-game survey (Aug 2026), pinning every module's fractional volume, the floor() display rule, the bridge/volume feedback, and boundaries 945/1700/2700. Bugs reported by **raylu**, **SLKLS**, and **xSupeFly** (issues #4–#7); cross-validated against **xflasar**'s PUNoted test table (MIT).
 - **Emitter algorithm structure:** Original description from **molp** ([PrUn Community Forum, Oct 2022](https://com.prosperousuniverse.com/t/minor-issues-and-ship-emitter-count-questions/5196)); constants and diminishing-multiplier behaviour reverse-engineered (Feb 2026)
 - **Shield/plate count parity:** **RNGzero**'s Ship Repair Calc spreadsheet, confirmed via WebSocket data
 
