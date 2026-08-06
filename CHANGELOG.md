@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.5.0 — Exact Ship Formulas (2026-08-06)
+
+Every derived-component formula now matches the game exactly, verified by a
+24-blueprint in-game survey (thanks to community reports from raylu, SLKLS,
+and xSupeFly — issues #4, #5, #6, #7).
+
+### Bug Fixes
+- Bridge rule: STL-only ships with Advanced (AEN) or Hyperthrust (HTE) engines now correctly get a BR2 bridge instead of BRS; FTL bridges now require both a reactor and an FTL fuel tank
+- Bridge volume feedback: non-FTL BR2 ships are +210 m³ larger, which cascades into crew quarters, hull plates, SSC, mass, and build time
+- Crew quarters thresholds corrected to 945/1700/2700 (was 1000/1750/2750) — fixes the starter ship (CQS, not CQT) and the AEN clipper misidentifications
+- Volume model rebuilt with fractional (half-integer) module deltas and floor(), matching the in-game BLU display exactly — eliminates a class of off-by-one volume/SSC errors (e.g. HTE ships)
+
+### Technical
+- New in-game ground-truth regression suite: 24 blueprints with volume, bridge, crew quarters, SSC, and mass assertions from BLU screenshots
+- New 561-combination regression suite vendored from PUNoted (MIT)
+- Formula reference spec rewritten: fractional deltas, floor rule, bridge rule with volume feedback, CQ boundary evidence
+
 ## 1.4.0 — Cherry-Pick Filter, Discord Embeds, CQ Fix (2026-03-23)
 
 ### Features
