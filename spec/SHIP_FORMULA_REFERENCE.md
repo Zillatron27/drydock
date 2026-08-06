@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-08-06
 **DryDock Version:** 1.5.0
-**Validation:** 24-blueprint in-game survey (Aug 2026, `src/formulas/__tests__/ingame_ships.test.ts`) + 52 ship blueprints + 17 additional for volume validation + 561-combination PUNoted test table (`src/formulas/__tests__/punoted_lookup.test.ts`)
+**Validation:** 65 purpose-built in-game blueprints across two campaigns — 41 (Feb–Mar 2026: module isolation swaps + CQ threshold search; 17 appear in the CQ validation table below) and 24 (Aug 2026: fraction survey + boundary probes, `src/formulas/__tests__/ingame_ships.test.ts`) — plus 52 real ship configurations and the 561-combination PUNoted test table (`src/formulas/__tests__/punoted_lookup.test.ts`)
 
 This document describes how Prosperous Universe calculates ship stats from a blueprint's module selections. These formulas were reverse-engineered by building isolation blueprints in-game, varying one module at a time and recording the results. Formula's have been validated against the in-game data but may still contain errors. 
 
