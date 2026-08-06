@@ -1,13 +1,15 @@
 import type { ModuleSelections } from '../types';
 
 /**
- * Pre-loaded example blueprints — common "evo" ship configurations.
- * Source: Dan's ship procurement spreadsheet (14 Jan 2026).
+ * Pre-loaded example blueprints.
  *
- * All four use the same base platform:
- *   FSE engine, MSL STL tank, QCR reactor, LFL FTL tank, LHP hull plates
- *   No shields, no stability system, no optional equipment.
- * Only the cargo bay differs.
+ * "Starter Ship" is the stock ship every new player begins with (issue #5's
+ * ship, also the volume model's reference configuration).
+ *
+ * The four "evo" configurations share one base platform (FSE engine, MSL STL
+ * tank, QCR reactor, LFL FTL tank, LHP hull plates, no optional equipment) and
+ * differ only in cargo bay. Source: Dan's ship procurement spreadsheet
+ * (14 Jan 2026).
  */
 
 export interface PresetBlueprint {
@@ -31,6 +33,24 @@ const BASE_MODULES: Omit<ModuleSelections, 'cargoBay'> = {
 };
 
 export const PRESET_BLUEPRINTS: PresetBlueprint[] = [
+  {
+    name: 'Starter Ship',
+    description: 'The ship every new player starts with. Price a rebuild or an upgrade baseline.',
+    modules: {
+      stlEngine: 'ENG',
+      stlFuelTank: 'SSL',
+      ftlReactor: 'RCT',
+      ftlFuelTank: 'SFL',
+      cargoBay: 'SCB',
+      hullPlates: 'BHP',
+      heatShielding: null,
+      whippleShielding: null,
+      stabilitySystem: null,
+      radiationShielding: null,
+      selfRepairDrones: null,
+      highGSeats: null,
+    },
+  },
   {
     name: '2k2k LCB Hauler',
     description: 'Balanced hauler — 2k volume, 2k weight. The workhorse.',
