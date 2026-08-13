@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.3 — Colony Ship Preset (2026-08-13)
+
+### Features
+- New "Colony Ship (BP-CLNY-0000)" example blueprint — the stock colony ship as a read-only preset with its exact in-game bill of materials and stats, for CX cost research (issue #3, suggested by martianengineer)
+- Blueprint cards now show mass alongside volume
+
+### Technical
+- New fixed-BOM blueprint concept: BOM is authoritative game data rather than derived from module selections; Edit/Dupe/Share/Export are disabled for these
+- Vortex Engine (VOE), Vortex Fuel Tank (VFT), and Habitation Module (HAM) added to the material catalog
+- "1k/3k VCB GasRunner" preset renamed to "1k/3k VCB Gas Hauler" for naming consistency
+
 ## 1.5.2 — Starter Ship BLU Name (2026-08-06)
 
 ### Bug Fixes
