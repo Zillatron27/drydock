@@ -1,4 +1,4 @@
-import type { ModuleSelections } from '../types';
+import type { ModuleSelections, StaticShipStats } from '../types';
 import {
   calculateVolume,
   calculateMass,
@@ -10,6 +10,8 @@ import styles from './StatsPanel.module.css';
 
 interface StatsPanelProps {
   selections: ModuleSelections;
+  /** When set, render these in-game values instead of computing from selections (fixed-BOM blueprints). */
+  staticStats?: StaticShipStats;
 }
 
 function getModifier(ticker: string | null, key: string): number {
@@ -38,7 +40,31 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function StatsPanel({ selections }: StatsPanelProps) {
+export default function StatsPanel({ selections, staticStats }: StatsPanelProps) {
+  // Fixed-BOM blueprints: the formula engine can't model these ships, so show
+  // the transcribed in-game values and skip the drive/shield sections.
+  if (staticStats) {
+    return (
+      <div className={styles.panel}>
+        <div className={styles.section}>
+          <span className={styles.sectionHeader}>Ship Overview</span>
+          <div className={styles.statsGrid}>
+            <Stat label="Volume" value={`${staticStats.volume.toLocaleString()} m³`} />
+            <Stat label="Mass" value={`${staticStats.mass.toLocaleString(undefined, { maximumFractionDigits: 1 })} t`} />
+            <Stat label="Build Time" value={formatBuildTime(staticStats.buildTimeHours)} />
+          </div>
+        </div>
+        <div className={styles.section}>
+          <span className={styles.sectionHeader}>Cargo</span>
+          <div className={styles.statsGrid}>
+            <Stat label="Volume Capacity" value={`${staticStats.cargoVolume.toLocaleString()} m³`} />
+            <Stat label="Weight Capacity" value={`${staticStats.cargoWeight.toLocaleString()} t`} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const volume = calculateVolume(selections);
   const mass = calculateMass(selections, volume);
   const buildTime = calculateBuildTime(mass);

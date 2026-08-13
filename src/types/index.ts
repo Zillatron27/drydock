@@ -33,6 +33,26 @@ export interface Blueprint {
   name: string;
   moduleSelections: ModuleSelections;
   bom: BOMEntry[];
+  /**
+   * Fixed-BOM blueprint (e.g. the stock Colony Ship): the BOM is authoritative
+   * game data, not derived from moduleSelections. Edit/Dupe/Share/Export are
+   * disabled because those flows all rebuild from moduleSelections and would
+   * lose the real BOM.
+   */
+  fixed?: boolean;
+  staticStats?: StaticShipStats;
+}
+
+/**
+ * In-game ship stats for a fixed-BOM blueprint, transcribed from the game UI
+ * rather than computed by the formula engine (which can't model these ships).
+ */
+export interface StaticShipStats {
+  volume: number;        // m³, as displayed in-game
+  mass: number;          // t, operating empty mass
+  buildTimeHours: number;
+  cargoVolume: number;   // m³
+  cargoWeight: number;   // t
 }
 
 /** Single line item in the Bill of Materials */

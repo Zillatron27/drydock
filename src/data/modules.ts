@@ -206,6 +206,12 @@ export const materialInfo: Record<string, { name: string; category: MaterialCate
   BGS: { name: 'Basic High-G Seats', category: 'ship_parts' },
   AGS: { name: 'Advanced High-G Seats', category: 'ship_parts' },
 
+  // Colony ship modules — not selectable in the editor; appear only in
+  // fixed-BOM presets (BP-CLNY-0000). Categories match FIO material data.
+  VOE: { name: 'Vortex Engine', category: 'ship_engines' },
+  VFT: { name: 'Vortex Fuel Tank', category: 'ship_kits' },
+  HAM: { name: 'Habitation Module', category: 'ship_parts' },
+
   // Auto-calculated components
   SSC: { name: 'Ship Structure Component', category: 'ship_parts' },
   FFC: { name: 'FTL Field Controller', category: 'electronic_systems' },

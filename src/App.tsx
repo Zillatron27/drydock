@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { Blueprint, ModuleSelections } from './types';
 import { calculateBOM } from './formulas';
-import { PRESET_BLUEPRINTS } from './data/presets';
+import { PRESET_BLUEPRINTS, FIXED_PRESET_BLUEPRINTS } from './data/presets';
 import Header from './components/Header';
 import { VERSION } from './version';
 import { BlueprintCard, NewBlueprintCard } from './components/BlueprintCard';
@@ -24,12 +24,21 @@ const STORAGE_KEY = 'drydock_blueprints';
 const PRESETS_LOADED_KEY = 'drydock_presets_loaded';
 
 function generatePresetsAsBlueprints(): Blueprint[] {
-  return PRESET_BLUEPRINTS.map(preset => ({
+  const regular: Blueprint[] = PRESET_BLUEPRINTS.map(preset => ({
     id: crypto.randomUUID(),
     name: preset.name,
     moduleSelections: preset.modules,
     bom: calculateBOM(preset.modules),
   }));
+  const fixed: Blueprint[] = FIXED_PRESET_BLUEPRINTS.map(preset => ({
+    id: crypto.randomUUID(),
+    name: preset.name,
+    moduleSelections: preset.moduleSelections,
+    bom: preset.bom.map(entry => ({ ...entry })),
+    fixed: true,
+    staticStats: preset.staticStats,
+  }));
+  return [...regular, ...fixed];
 }
 
 function loadBlueprints(): Blueprint[] {
@@ -190,13 +199,15 @@ export default function App() {
     return copyToClipboard(json);
   }
 
+  // Fixed-BOM blueprints are excluded: the export schema is module-based and
+  // can't represent their BOM (import validation would reject it anyway).
   async function handleExportAll(): Promise<boolean> {
-    const json = JSON.stringify(exportCollection(blueprints), null, 2);
+    const json = JSON.stringify(exportCollection(blueprints.filter(b => !b.fixed)), null, 2);
     return copyToClipboard(json);
   }
 
   function handleDownloadAll(): void {
-    const json = JSON.stringify(exportCollection(blueprints), null, 2);
+    const json = JSON.stringify(exportCollection(blueprints.filter(b => !b.fixed)), null, 2);
     downloadAsFile(json, buildExportFilename('collection'));
   }
 
@@ -263,7 +274,10 @@ export default function App() {
             }}>
               {selectedBlueprint.name}
             </h2>
-            <StatsPanel selections={selectedBlueprint.moduleSelections} />
+            <StatsPanel
+              selections={selectedBlueprint.moduleSelections}
+              staticStats={selectedBlueprint.staticStats}
+            />
             <ShipyardDetail
               blueprintName={selectedBlueprint.name}
               bom={selectedBlueprint.bom}

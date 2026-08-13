@@ -372,6 +372,12 @@ The full Bill of Materials for a ship blueprint is assembled by combining:
 
 - **Vortex modules** (VOR, VOE, VFT) — colony ship components, excluded from this analysis
 - **Habitation Module** (HAM) — colony ship only
+
+  Colony ships are not modelled by these formulas. DryDock instead ships the stock
+  colony ship (BP-CLNY-0000) as a fixed, read-only preset whose bill of materials and
+  stats are taken verbatim from the game's blueprint payload (Oct 2025, verified
+  against the in-game BLU screen Aug 2026). The blueprint is identical and locked for
+  every player, so no formula derivation is needed.
 - **Operating empty mass formula from first principles** — we can calculate exact mass from BOM weights, but the game may use a different internal formula. The BOM summation approach is validated and accurate.
 
 ---

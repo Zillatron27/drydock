@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Blueprint } from '../types';
-import { calculateVolume } from '../formulas';
+import { calculateVolume, calculateMass } from '../formulas';
 import styles from './BlueprintCard.module.css';
 
 interface BlueprintCardProps {
@@ -14,7 +14,15 @@ interface BlueprintCardProps {
 }
 
 export function BlueprintCard({ blueprint, onClick, onDelete, onEdit, onDuplicate, onExport, onShare }: BlueprintCardProps) {
-  const volume = calculateVolume(blueprint.moduleSelections);
+  // Fixed-BOM blueprints can't be edited/duplicated/shared/exported — all of
+  // those flows rebuild from moduleSelections, which don't cover these ships.
+  const isFixed = blueprint.fixed === true;
+  const volume = isFixed
+    ? blueprint.staticStats?.volume ?? 0
+    : calculateVolume(blueprint.moduleSelections);
+  const mass = isFixed
+    ? blueprint.staticStats?.mass ?? 0
+    : calculateMass(blueprint.moduleSelections, volume);
   const materialCount = blueprint.bom.length;
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
@@ -50,7 +58,7 @@ export function BlueprintCard({ blueprint, onClick, onDelete, onEdit, onDuplicat
             &times;
           </button>
         </div>
-        <div className={styles.cardActions}>
+        {!isFixed && <div className={styles.cardActions}>
           <button
             className={styles.exportBtn}
             onClick={onEdit}
@@ -81,12 +89,16 @@ export function BlueprintCard({ blueprint, onClick, onDelete, onEdit, onDuplicat
           >
             {copied ? 'Copied!' : 'Export'}
           </button>
-        </div>
+        </div>}
       </div>
       <div className={styles.cardStats}>
         <div className={styles.stat}>
           <span className={styles.statLabel}>Volume</span>
           <span className={styles.statValue}>{volume.toLocaleString()} m³</span>
+        </div>
+        <div className={styles.stat}>
+          <span className={styles.statLabel}>Mass</span>
+          <span className={styles.statValue}>{mass.toLocaleString(undefined, { maximumFractionDigits: 1 })} t</span>
         </div>
         <div className={styles.stat}>
           <span className={styles.statLabel}>Materials</span>
